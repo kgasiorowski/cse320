@@ -7,8 +7,8 @@
 #define TUTE 0x40
 #define ENCR 0x20
 #define DECR 0x20
-#define NVAL 0x31
-#define N320 0x08
+#define NVAL 0x1F
+//#define N320 0x08
 
 Test(ValidArgs_Suite, help_menu){
 
@@ -18,7 +18,7 @@ Test(ValidArgs_Suite, help_menu){
 
     unsigned char mode = validargs(2, fake_args, &in, &out);
 
-    cr_assert_eq((mode & HELP), 0x80, "Help menu bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & HELP), HELP, "Help menu bit wasn't set, got 0x%X ", mode);
 }
 
 Test(ValidArgs_Suite, subs_decr){
@@ -28,8 +28,8 @@ Test(ValidArgs_Suite, subs_decr){
 
     char mode = validargs(5, fake_args, &in, &out);
 
-    cr_assert_eq((mode & SUBS), 0x40, "Substitution bit wasn't set, got 0x%X ", mode);
-    cr_assert_eq((mode & DECR), 0x20, "Decoding bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & SUBS), SUBS, "Substitution bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & DECR), DECR, "Decoding bit wasn't set, got 0x%X ", mode);
 }
 
 Test(ValidArgs_Suite, subs_decr_n){
@@ -39,13 +39,15 @@ Test(ValidArgs_Suite, subs_decr_n){
 
     char mode = validargs(6, fake_args, &in, &out);
 
-    cr_assert_eq((mode & SUBS), 0x40, "Substitution bit wasn't set, got 0x%X ", mode);
-    cr_assert_eq((mode & DECR), 0x20, "Decoding bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & SUBS), SUBS, "Substitution bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & DECR), DECR, "Decoding bit wasn't set, got 0x%X ", mode);
 
     int n = 3452;
+    unsigned int alphabetLength = strleng(Alphabet);
 
-    cr_assert_eq((mode & NVAL), n % 26, "n value expected to be %d was %d",
-                 n % 26, (mode & NVAL));
+
+    cr_assert_eq((mode & NVAL), n % alphabetLength, "n value expected to be %d was %d, alphabet length:%d",
+                 n % alphabetLength, (mode & NVAL), alphabetLength);
 }
 
 Test(ValidArgs_Suite, subs_encr){
@@ -55,7 +57,7 @@ Test(ValidArgs_Suite, subs_encr){
 
     char mode = validargs(5, fake_args, &in, &out);
 
-    cr_assert_eq((mode & SUBS), 0x40, "Substitution bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & SUBS), SUBS, "Substitution bit wasn't set, got 0x%X ", mode);
     cr_assert_eq((mode & ENCR), 0, "Encoding bit wasn't zero, got 0x%X ", mode);
 }
 
@@ -66,7 +68,7 @@ Test(ValidArgs_Suite, subs_encr_n){
 
     char mode = validargs(6, fake_args, &in, &out);
 
-    cr_assert_eq((mode & SUBS), 0x40, "Substitution bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & SUBS), SUBS, "Substitution bit wasn't set, got 0x%X ", mode);
     cr_assert_eq((mode & ENCR), 0, "Encoding bit wasn't zero, got 0x%X ", mode);
 
     int n = 3;
@@ -98,7 +100,7 @@ Test(ValidArgs_Suite, tuts_decr){
     char mode = validargs(5, fake_args, &in, &out);
 
     cr_assert_eq((mode & TUTE), 0, "Tutense bit wasn't zero, got 0x%X ", mode);
-    cr_assert_eq((mode & ENCR), 0x20, "Decoding bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & ENCR), ENCR, "Decoding bit wasn't set, got 0x%X ", mode);
 
     cr_assert_eq((mode & NVAL), 0, "n value expected to be 0 was %d",
                  (mode & NVAL));

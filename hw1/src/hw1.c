@@ -95,10 +95,10 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 
 }
 
-int strleng(char *str){
+int strleng(const char *str){
 
 	register int count = 0; 	//Counter
-	char *temp = str; 		//Copy the pointer, just so stuff doesn't get messed up
+	const char *temp = str; 		//Copy the pointer, just so stuff doesn't get messed up
 
 	while(*temp++)
 		count++;
@@ -107,7 +107,7 @@ int strleng(char *str){
 
 }
 
-int streq(char *str1, char *str2){
+int streq(const char *str1, const char *str2){
 
 	//Compare lengths
 	if(strleng(str1) != strleng(str2))
@@ -123,5 +123,59 @@ int streq(char *str1, char *str2){
 	}
 
 	return 1;
+
+}
+
+int findIndex(const char c, const char* string)
+{
+
+	unsigned int index = 0;
+
+	do{
+
+		if(c == *string)
+			return index;
+
+		index++;
+
+	}while(*string++);
+
+	//Character not found
+	return -1;
+
+}
+
+char getChar(const int index, const char* string){
+
+	int stringLength = strleng(string);
+
+	if(index <= -1 || index >= stringLength)
+		return '\0';
+
+	return *(string += index);
+
+}
+
+void substitutionCipher(FILE *in, FILE *out, const int n){
+
+	//Initialize our char to zero
+	unsigned char c = '\0';
+	unsigned int index = 0;
+
+	const char* alphabetCopy = Alphabet;
+	const int alphabetLength = strleng(alphabetCopy);
+
+	while((c = fgetc(in)) != EOF)
+	{
+		//Find the index in the alphabet, add the index, mod to make sure it's in range
+		index = findIndex(c, alphabetCopy);
+		index += n;
+		index %= alphabetLength;
+
+		c = getChar(index, alphabetCopy);
+
+		fputc(c, out);
+
+	}
 
 }

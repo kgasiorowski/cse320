@@ -20,8 +20,11 @@
  * @return Refer to homework document for the return value of this function.
  */
 char validargs(int argc, char **argv, FILE **in, FILE **out);
-int streq(char*, char*);
-int strleng(char*);
+int streq(const char*,const char*);
+int strleng(const char*);
+void substitutionCipher(FILE*, FILE*,const int);
+int findIndex(const char, const char*);
+char getChar(const int, const char*);
 
 #define USAGE(retcode) do{                                                        \
 fprintf(stderr, "%s\n",                                                           \

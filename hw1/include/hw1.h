@@ -5,6 +5,8 @@
 
 #include "const.h"
 
+
+
 /**
  * @brief Validates command line arguments passed to the program.
  * @details This function will validate all the arguments passed to the program
@@ -18,7 +20,8 @@
  * @return Refer to homework document for the return value of this function.
  */
 char validargs(int argc, char **argv, FILE **in, FILE **out);
-
+int streq(char*, char*);
+int strleng(char*);
 
 #define USAGE(retcode) do{                                                        \
 fprintf(stderr, "%s\n",                                                           \

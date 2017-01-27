@@ -16,9 +16,9 @@ Test(ValidArgs_Suite, help_menu){
     FILE* in;
     FILE* out;
 
-    char mode = validargs(2, fake_args, &in, &out);
+    unsigned char mode = validargs(2, fake_args, &in, &out);
 
-    cr_assert_eq((mode & HELP), 1, "Help menu bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & HELP), 0x80, "Help menu bit wasn't set, got 0x%X ", mode);
 }
 
 Test(ValidArgs_Suite, subs_decr){
@@ -28,8 +28,8 @@ Test(ValidArgs_Suite, subs_decr){
 
     char mode = validargs(5, fake_args, &in, &out);
 
-    cr_assert_eq((mode & SUBS), 1, "Substitution bit wasn't set, got 0x%X ", mode);
-    cr_assert_eq((mode & DECR), 1, "Decoding bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & SUBS), 0x40, "Substitution bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & DECR), 0x20, "Decoding bit wasn't set, got 0x%X ", mode);
 }
 
 Test(ValidArgs_Suite, subs_decr_n){
@@ -39,8 +39,8 @@ Test(ValidArgs_Suite, subs_decr_n){
 
     char mode = validargs(6, fake_args, &in, &out);
 
-    cr_assert_eq((mode & SUBS), 1, "Substitution bit wasn't set, got 0x%X ", mode);
-    cr_assert_eq((mode & DECR), 1, "Decoding bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & SUBS), 0x40, "Substitution bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & DECR), 0x20, "Decoding bit wasn't set, got 0x%X ", mode);
 
     int n = 3452;
 
@@ -55,7 +55,7 @@ Test(ValidArgs_Suite, subs_encr){
 
     char mode = validargs(5, fake_args, &in, &out);
 
-    cr_assert_eq((mode & SUBS), 1, "Substitution bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & SUBS), 0x40, "Substitution bit wasn't set, got 0x%X ", mode);
     cr_assert_eq((mode & ENCR), 0, "Encoding bit wasn't zero, got 0x%X ", mode);
 }
 
@@ -66,7 +66,7 @@ Test(ValidArgs_Suite, subs_encr_n){
 
     char mode = validargs(6, fake_args, &in, &out);
 
-    cr_assert_eq((mode & SUBS), 1, "Substitution bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & SUBS), 0x40, "Substitution bit wasn't set, got 0x%X ", mode);
     cr_assert_eq((mode & ENCR), 0, "Encoding bit wasn't zero, got 0x%X ", mode);
 
     int n = 3;
@@ -98,7 +98,7 @@ Test(ValidArgs_Suite, tuts_decr){
     char mode = validargs(5, fake_args, &in, &out);
 
     cr_assert_eq((mode & TUTE), 0, "Tutense bit wasn't zero, got 0x%X ", mode);
-    cr_assert_eq((mode & ENCR), 0, "Decoding bit wasn't set, got 0x%X ", mode);
+    cr_assert_eq((mode & ENCR), 0x20, "Decoding bit wasn't set, got 0x%X ", mode);
 
     cr_assert_eq((mode & NVAL), 0, "n value expected to be 0 was %d",
                  (mode & NVAL));
@@ -135,4 +135,26 @@ Test(ValidArgs_Suite, create_files){
     remove("testfile");
     remove("foobar");
     cr_log_warn("Deleting created file.");
+}
+
+Test(ValidArgs_Suite, too_few_args){
+
+    char *fake_args[] = {"program_name"};
+    FILE *in, *out;
+
+    unsigned char mode = validargs(1, fake_args, &in, &out);
+
+    cr_assert_eq(mode, 0, "Program did not fail on too few arguments");
+
+}
+
+Test(ValidArgs_Suite, too_many_args){
+
+    char *fake_args[] = {"program name", "a", "a", "a", "a", "a", "a"};
+    FILE *in, *out;
+
+    unsigned char mode = validargs(7, fake_args, &in, &out);
+
+    cr_assert_eq(mode, 0, "Program did not fail on too many arguments");
+
 }

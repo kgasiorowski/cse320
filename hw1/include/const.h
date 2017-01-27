@@ -6,5 +6,6 @@
 
 extern char *Tutnese[];
 extern char buffer[10];
+extern char Alphabet[];
 
 #endif

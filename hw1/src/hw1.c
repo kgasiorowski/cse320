@@ -95,6 +95,49 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 
 }
 
+void substitutionCipher(FILE *in, FILE *out, const int n){
+
+	//Initialize our char to zero
+	char c = '\0';
+
+	const char* alphabetCopy = Alphabet;
+	const int alphabetLength = strleng(alphabetCopy);
+
+	while((c = fgetc(in)) != EOF)
+	{
+
+		//Convert lower case char to upper case
+		processSubChar(&c, alphabetCopy, n, alphabetLength);
+		fputc(c, out);
+
+	}
+
+}
+
+void processSubChar(char *c, const char *alphabet, int alphabetLength, int shiftAmnt){
+
+	int index = 0;
+
+	//Change lowercase to uppercase only
+	const int diff = 'a' - 'A';
+	*c = (*c >= 'a' && *c <= 'z')?(*c - diff):(*c);
+
+	index = findIndex(*c, alphabet);
+
+	//printf("Found index for %c in %s: %d\n", *c, alphabet, index);
+
+	index += shiftAmnt;
+
+	//printf("Shift amount %d added = %d\n", shiftAmnt, index);
+
+	index %= alphabetLength;
+
+	//printf("Shifted index %% length = %d\n", index);
+
+	*c = getChar(index, alphabet);
+
+}
+
 int strleng(const char *str){
 
 	register int count = 0; 	//Counter
@@ -153,49 +196,5 @@ char getChar(const int index, const char* string){
 		return '\0';
 
 	return *(string += index);
-
-}
-
-void processSubChar(char *c, const char *alphabet, int alphabetLength, int shiftAmnt){
-
-	int index = 0;
-
-	//Change lowercase to uppercase only
-	const int diff = 'a' - 'A';
-	*c = (*c >= 'a' && *c <= 'z')?(*c - diff):(*c);
-
-	index = findIndex(*c, alphabet);
-
-	//printf("Found index for %c in %s: %d\n", *c, alphabet, index);
-
-	index += shiftAmnt;
-
-	//printf("Shift amount %d added = %d\n", shiftAmnt, index);
-
-	index %= alphabetLength;
-
-	//printf("Shifted index %% length = %d\n", index);
-
-	*c = getChar(index, alphabet);
-
-}
-
-void substitutionCipher(FILE *in, FILE *out, const int n){
-
-	//Initialize our char to zero
-	char c = '\0';
-
-	const char* alphabetCopy = Alphabet;
-	const int alphabetLength = strleng(alphabetCopy);
-
-	while((c = fgetc(in)) != EOF)
-	{
-
-		//Convert lower case char to upper case
-		processSubChar(&c, alphabetCopy, n, alphabetLength);
-
-		fputc(c, out);
-
-	}
 
 }

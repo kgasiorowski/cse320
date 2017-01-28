@@ -5,8 +5,6 @@
 
 #include "const.h"
 
-
-
 /**
  * @brief Validates command line arguments passed to the program.
  * @details This function will validate all the arguments passed to the program
@@ -27,6 +25,12 @@ int findIndex(const char, const char*);
 char getChar(const int, const char*);
 void processSubChar(char*, const char*, int, int);
 void strcopy(const char*, char*);
+
+#ifdef INFO
+	#define info(fmt, ...) do{fprintf(stderr, "INFO: %s:%s:%d " fmt, __FILE__, __FUNCTION__,__LINE__, ##__VA_ARGS__);}while(0)
+#else
+	#define info(fmt, ...)
+#endif
 
 #define USAGE(retcode) do{                                                        \
 fprintf(stderr, "%s\n",                                                           \

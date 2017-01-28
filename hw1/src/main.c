@@ -33,11 +33,39 @@ int main(int argc, char **argv) {
 	    	const int n = mode & NVAL;
 	    	substitutionCipher(in, out, n);
 
+            info("shift amount: %d\n", n);
+
+            if(streq(argv[3], "-"))
+                info("input file: %s\n", "STDIN");
+            else
+                info("input file: %s\n", argv[3]);
+
+            if(streq(argv[4], "-"))
+                info("output file: %s\n", "STDOUT");
+            else
+                info("output file: %s\n", argv[4]);
+
+            info("operation: encryption\n");
+
 	    }else{
 
 	    	//Decryption
 	    	const int n = -(mode & NVAL);
 	    	substitutionCipher(in, out, n);
+
+            info("shift amount: %d\n", -n);
+
+            if(streq(argv[3], "-"))
+                info("input file: %s\n", "STDIN");
+            else
+                info("input file: %s\n", argv[3]);
+
+            if(streq(argv[4], "-"))
+                info("output file: %s\n", "STDOUT");
+            else
+                info("output file: %s\n", argv[4]);
+
+            info("operation: decryption\n");
 
 	    }
 

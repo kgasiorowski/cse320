@@ -4,6 +4,7 @@
 // For your helper functions (you may add additional files also)
 // DO NOT define a main function here!
 
+//Validates arguments
 char validargs(int argc, char** argv, FILE** in, FILE** out) {
 	char ret = 0;
 
@@ -41,6 +42,9 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 				//Exit if no int can be scanned
 				return 0;
 			}
+
+			if(n < 0)
+				return 0;
 
 		}else{
 
@@ -82,23 +86,21 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 
 		*in = stdin;
 
-	}else
-		if((*in = fopen(thirdArg, "r")) == NULL)
-			return 0;
+	}else if((*in = fopen(thirdArg, "r")) == NULL)
+		return 0;
 
 	//Parse fourth argument (output file)
-	if(streq(fourthArg, "-")){
-
+	if(streq(fourthArg, "-"))
 		*out = stdout;
+	else if((*out = fopen(fourthArg, "w")) == NULL)
+		return 0;
 
-	}else
-		if((*out = fopen(fourthArg, "w")) == NULL)
-			return 0;
 
 	return ret;
 
 }
 
+//Main function for substitution encryption/decryption
 void substitutionCipher(FILE *in, FILE *out, const int n){
 
 	//Initialize our char to zero
@@ -120,6 +122,7 @@ void substitutionCipher(FILE *in, FILE *out, const int n){
 
 }
 
+//Processes a character for substitution cipher
 void processSubChar(char *c, const char *alphabet, int alphabetLength, int shiftAmnt){
 
 	int index = 0;
@@ -147,6 +150,7 @@ void processSubChar(char *c, const char *alphabet, int alphabetLength, int shift
 
 }
 
+//Calculates string length
 int strleng(const char *str){
 
 	register int count = 0; 	//Counter
@@ -159,6 +163,7 @@ int strleng(const char *str){
 
 }
 
+//Returns if two strings are equivalent
 int streq(const char *str1, const char *str2){
 
 	//Compare lengths
@@ -178,6 +183,7 @@ int streq(const char *str1, const char *str2){
 
 }
 
+//Find the index of a char in a string
 int findIndex(const char c, const char* string)
 {
 
@@ -197,6 +203,7 @@ int findIndex(const char c, const char* string)
 
 }
 
+//Gets the char at a specific index of a string
 char getChar(const int index, const char* string){
 
 	int stringLength = strleng(string);
@@ -208,6 +215,7 @@ char getChar(const int index, const char* string){
 
 }
 
+//Copies a string into another
 void strcopy(const char *orig, char *dest){
 
 	while((*dest++ = *orig++));

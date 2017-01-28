@@ -156,23 +156,43 @@ char getChar(const int index, const char* string){
 
 }
 
+void processSubChar(char *c, const char *alphabet, int alphabetLength, int shiftAmnt){
+
+	int index = 0;
+
+	//Change lowercase to uppercase only
+	const int diff = 'a' - 'A';
+	*c = (*c >= 'a' && *c <= 'z')?(*c - diff):(*c);
+
+	index = findIndex(*c, alphabet);
+
+	//printf("Found index for %c in %s: %d\n", *c, alphabet, index);
+
+	index += shiftAmnt;
+
+	//printf("Shift amount %d added = %d\n", shiftAmnt, index);
+
+	index %= alphabetLength;
+
+	//printf("Shifted index %% length = %d\n", index);
+
+	*c = getChar(index, alphabet);
+
+}
+
 void substitutionCipher(FILE *in, FILE *out, const int n){
 
 	//Initialize our char to zero
-	unsigned char c = '\0';
-	unsigned int index = 0;
+	char c = '\0';
 
 	const char* alphabetCopy = Alphabet;
 	const int alphabetLength = strleng(alphabetCopy);
 
 	while((c = fgetc(in)) != EOF)
 	{
-		//Find the index in the alphabet, add the index, mod to make sure it's in range
-		index = findIndex(c, alphabetCopy);
-		index += n;
-		index %= alphabetLength;
 
-		c = getChar(index, alphabetCopy);
+		//Convert lower case char to upper case
+		processSubChar(&c, alphabetCopy, n, alphabetLength);
 
 		fputc(c, out);
 

@@ -22,10 +22,14 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 	char *fourthArg = 	argv[4];
 	char *fifthArg = 	argv[5];
 
-	//Parse first argument
+	//First check if the first arg is h.
 	if(streq(firstArg, "-h"))
 		return 0x80;
-	else if(streq(firstArg, "-s")){
+	else if(argc != 5 && argc != 6)
+		return 0;
+
+	//Parse first argument
+	if(streq(firstArg, "-s")){
 		// Set the second msb
 		ret |= 0x40;
 
@@ -103,11 +107,13 @@ void substitutionCipher(FILE *in, FILE *out, const int n){
 	const char* alphabetCopy = Alphabet;
 	const int alphabetLength = strleng(alphabetCopy);
 
+	//printf("\n\nFound alphabet %s : length %d\n\n", alphabetCopy, alphabetLength);
+
 	while((c = fgetc(in)) != EOF)
 	{
 
 		//Convert lower case char to upper case
-		processSubChar(&c, alphabetCopy, n, alphabetLength);
+		processSubChar(&c, alphabetCopy, alphabetLength, n);
 		fputc(c, out);
 
 	}
@@ -123,16 +129,19 @@ void processSubChar(char *c, const char *alphabet, int alphabetLength, int shift
 	*c = (*c >= 'a' && *c <= 'z')?(*c - diff):(*c);
 
 	index = findIndex(*c, alphabet);
+	//printf("\nFound index for %c in %s: %d\n", *c, alphabet, index);
 
-	//printf("Found index for %c in %s: %d\n", *c, alphabet, index);
+	if(index == -1)
+		return;
 
 	index += shiftAmnt;
-
 	//printf("Shift amount %d added = %d\n", shiftAmnt, index);
 
 	index %= alphabetLength;
+	//printf("Shifted index %% length = %d\n\n", index);
 
-	//printf("Shifted index %% length = %d\n", index);
+	if(index<0)
+		index+=alphabetLength;
 
 	*c = getChar(index, alphabet);
 
@@ -141,7 +150,7 @@ void processSubChar(char *c, const char *alphabet, int alphabetLength, int shift
 int strleng(const char *str){
 
 	register int count = 0; 	//Counter
-	const char *temp = str; 		//Copy the pointer, just so stuff doesn't get messed up
+	const char *temp = str; 	//Copy the pointer, just so stuff doesn't get messed up
 
 	while(*temp++)
 		count++;

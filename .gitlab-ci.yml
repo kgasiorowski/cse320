@@ -19,8 +19,17 @@ before_script:
 
 stages:
     - test
+    - run
 
 
 test:
     script:
+<<<<<<< HEAD:.gitlab-ci.yml
         - $BINDIR/$TESTEXEC --verbose=0
+=======
+        - $BINDIR/$TESTEXEC --verbose=0
+
+run:
+    script:
+        - echo
+>>>>>>> HW1_CODE/master:hw1-gitlab-ci.yml

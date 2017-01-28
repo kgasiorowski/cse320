@@ -9,7 +9,6 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 	char ret = 0;
 
 	const unsigned int alphabetLength = strleng(Alphabet);
-	const int default_n = DEFAULT_N;
 	int n = 0;
 
 	//printf("Alphabet length scanned: %d\n", alphabetLength);
@@ -49,7 +48,7 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 		}else{
 
 			// Or use the default if no number was passed in
-			n = default_n;
+			n = DEFAULT_N;
 
 		}
 
@@ -66,6 +65,7 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 
 		//Ensure that the second msb is not set (clear it)
 		ret &= ~0x40;
+		ret |= DEFAULT_N%alphabetLength;
 
 	}else
 		return 0;

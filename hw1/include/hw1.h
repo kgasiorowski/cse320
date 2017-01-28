@@ -26,6 +26,7 @@ void substitutionCipher(FILE*, FILE*,const int);
 int findIndex(const char, const char*);
 char getChar(const int, const char*);
 void processSubChar(char*, const char*, int, int);
+void strcopy(const char*, char*);
 
 #define USAGE(retcode) do{                                                        \
 fprintf(stderr, "%s\n",                                                           \

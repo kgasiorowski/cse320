@@ -7,7 +7,6 @@
 #define DECR 0x20
 #define NVAL 0x1F
 
-
 int main(int argc, char **argv) {
 
     FILE* in;
@@ -30,11 +29,13 @@ int main(int argc, char **argv) {
     	//Encryption or decryption?
     	if(!(mode & ENCR)){
 
+    		//Encryption
 	    	const int n = mode & NVAL;
 	    	substitutionCipher(in, out, n);
 
 	    }else{
 
+	    	//Decryption
 	    	const int n = -(mode & NVAL);
 	    	substitutionCipher(in, out, n);
 

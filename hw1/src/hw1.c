@@ -207,3 +207,9 @@ char getChar(const int index, const char* string){
 	return *(string += index);
 
 }
+
+void strcopy(const char *orig, char *dest){
+
+	while((*dest++ = *orig++));
+
+}

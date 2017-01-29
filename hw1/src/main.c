@@ -71,7 +71,15 @@ int main(int argc, char **argv) {
 
     }else{
 
+        if(!(mode & ENCR)){
+            //Encryption
+            tutneseEncrypt(in, out);
 
+        }else{
+            //Decryption
+
+
+        }
 
 
     }

@@ -1,4 +1,6 @@
-#include "hw1.h"
+#include "substitutionCipher.h"
+#include "const.h"
+#include "helpers.h"
 
 //Main function for substitution encryption/decryption
 void substitutionCipher(FILE *in, FILE *out, const int n){

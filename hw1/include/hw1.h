@@ -6,6 +6,7 @@
 #include "const.h"
 #include "helpers.h"
 #include "substitutionCipher.h"
+#include "tutnese.h"
 
 /**
  * @brief Validates command line arguments passed to the program.

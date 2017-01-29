@@ -1,4 +1,4 @@
-#include "substitutionCipher.h"
+#include "substitution.h"
 #include "const.h"
 #include "helpers.h"
 

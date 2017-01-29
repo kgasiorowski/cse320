@@ -5,7 +5,7 @@
 
 #include "const.h"
 #include "helpers.h"
-#include "substitutionCipher.h"
+#include "substitution.h"
 #include "tutnese.h"
 
 /**

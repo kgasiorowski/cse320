@@ -1,6 +1,7 @@
 #include "helpers.h"
 #include "const.h"
 #include "hw1.h"
+#include "debug.h"
 
 //Calculates string length
 int strleng(const char *str){
@@ -22,7 +23,7 @@ int streq(const char *str1, const char *str2){
 	if(strleng(str1) != strleng(str2))
 		return 0;
 
-	//Compare each character
+	//Compare each character while both are not null
 	while(*str1 && *str2){
 
 		//Compare and increment
@@ -134,25 +135,48 @@ char *capitalizestring(char *str){
 
 	strcopy(str, buffer);
 
-	info("String copied into buffer: %s\n", buffer);
+	debug("String copied into buffer: %s\n", buffer);
 
 	char c = *buffer;
-	info("Scanned first char: %c\n", c);
+	debug("Scanned first char: %c\n", c);
 
 	if(isLower(c)){
 
-		info("String is lowercase\n");
-		info("first char: %c\n", *buffer);
+		debug("String is lowercase\n");
+		debug("first char: %c\n", *buffer);
 
 		*buffer = c - ('a' - 'A');
 
-		info("new first char: %c\n", *buffer);
+		debug("new first char: %c\n", *buffer);
 
 	}else
-		info("String is not lowercase\n");
+		debug("String is not lowercase\n");
 
 
 
 	return buffer;
+
+}
+
+int cequals(const char c1, const char c2){
+
+	const int diff = 'a' - 'A';
+
+	if(isUpper(c1) && isUpper(c2))
+		//Both are uppercase
+		return c1 == c2;
+	else if(isUpper(c1) && isLower(c2))
+		//First is upper, second is lower
+		return (c1+diff) == c2;
+	else if(isLower(c1) && isUpper(c2))
+		//First is lower, second is upper
+		return (c1-diff) == c2;
+	else if(isLower(c1) && isLower(c2))
+		//Both lowercase
+		return c1 == c2;
+	else
+		return 0;
+
+
 
 }

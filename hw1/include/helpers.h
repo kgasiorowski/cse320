@@ -16,5 +16,6 @@ char toLower(const char);
 int strcontains(const char *, const char);
 char *capitalizestring(char *);
 char *findStringInArray(const char c, char**);
+int cequals(const char c1, const char c2);
 
 #endif

@@ -1,4 +1,6 @@
 #include "helpers.h"
+#include "const.h"
+#include "hw1.h"
 
 //Calculates string length
 int strleng(const char *str){
@@ -110,10 +112,47 @@ int strcontains(const char *str, const char c){
 
 }
 
-void capitalizestring(char *str){
+char toUpper(char c){
 
-	fprintf(stderr, "test1");
+	return (c <= 'z' && c >= 'a')?(c - ('a' - 'A')):c;
+
+}
+
+char toLower(char c){
+
+	return (c <= 'Z' && c >= 'A')?(c + ('a' - 'A')):c;
+
+}
+
+char *capitalizestring(char *str){
+
+	if(str == NULL)
+		return NULL;
+
+	if(strleng(str) == 0)
+		return str;
+
+	strcopy(str, buffer);
+
+	info("String copied into buffer: %s\n", buffer);
+
+	char c = *buffer;
+	info("Scanned first char: %c\n", c);
+
+	if(isLower(c)){
+
+		info("String is lowercase\n");
+		info("first char: %c\n", *buffer);
+
+		*buffer = c - ('a' - 'A');
+
+		info("new first char: %c\n", *buffer);
+
+	}else
+		info("String is not lowercase\n");
 
 
+
+	return buffer;
 
 }

@@ -11,8 +11,10 @@ int findIndex(const char, const char*);
 char getChar(const int, const char*);
 int isUpper(const char);
 int isLower(const char);
+char toUpper(const char);
+char toLower(const char);
 int strcontains(const char *, const char);
-void capitalizestring(char *);
+char *capitalizestring(char *);
 char *findStringInArray(const char c, char**);
 
 #endif

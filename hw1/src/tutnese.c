@@ -1,6 +1,4 @@
-#include "tutnese.h"
-#include "const.h"
-#include "helpers.h"
+#include "hw1.h"
 
 const char *vowels = "aeiouAEIOU";
 const char *consonants = "bcdfghjklmnpqrstvwyxzBCDFGHJKLMNPQRSTVWXYZ";
@@ -20,16 +18,45 @@ void tutneseEncrypt(FILE *in, FILE *out){
 	while(!finished){
 
 		c1 = fgetc(in);
-		if(c1 == EOF)
-			return;
+		if(c1 == EOF){
+
+			finished = 1;
+			continue;
+
+		}
+
+		info("First char read: %c\n", c1);
 
 		//Check the next char
 		c2 = fgetc(in);
-		if(c1 != c2)
+
+		info("Second char peeked: %c\n", c2);
+
+		if(c1 != c2){
 			//If it's not the same, put it back
 			ungetc(c2, in);
-		else{
+			info("Put second char %c back\n", c2);
+		}else{
 			//Double character
+			info("Double characters encountered: %c\n", c1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 		}
@@ -37,24 +64,37 @@ void tutneseEncrypt(FILE *in, FILE *out){
 		//Single character
 		if(strcontains(consonants, c1)){
 			//It's a consonant. Write some fun stuff to output
-			char *word = findStringInArray(c1, Tutnese);
+			info("c1 is a consonant: %c\n", c1);
+
+			char *word = findStringInArray(toLower(c1), Tutnese);
+
+			info("Scanned word %s from char %c\n", word, c1);
 
 			if(isUpper(c1)){
 
 				//First capitalize word, then put it into out
-				capitalizestring(word);
+				word = capitalizestring(word);
+
+				info("Capitalized word to %s to match char %c\n", word, c1);
+
 				fputs(word, out);
 
 			}else{
 
+				info("Writing word as-is");
 				//Put word up as-is
 				fputs(word, out);
 
 			}
 
-		}else
+		}else{
 			//It's a symbol or vowel
+			info("Character %c is a symbol or vowel. Printing to out", c1);
+
 			fputc(c1, out);
+
+
+		}
 
 	}
 

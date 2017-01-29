@@ -16,11 +16,14 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 	if(argc <= 1 || argc > 6)
 		return 0;
 
-	char *firstArg = 	argv[1];
-	char *secondArg = 	argv[2];
-	char *thirdArg = 	argv[3];
-	char *fourthArg = 	argv[4];
-	char *fifthArg = 	argv[5];
+	char * const* arguments = argv;
+
+	arguments++; //Skip program name
+	char *firstArg = 	*arguments++;
+	char *secondArg = 	*arguments++;
+	char *thirdArg = 	*arguments++;
+	char *fourthArg = 	*arguments++;
+	char *fifthArg = 	*arguments++;
 
 	//First check if the first arg is h.
 	if(streq(firstArg, "-h"))

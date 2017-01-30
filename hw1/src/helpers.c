@@ -68,7 +68,8 @@ char getChar(const int index, const char* string){
 
 }
 
-//Copies a string into another
+//Copies a string into another.
+//Returns address directly *after* where the copy took place
 void strcopy(const char *orig, char *dest){
 
 	while((*dest++ = *orig++));
@@ -177,6 +178,24 @@ int cequals(const char c1, const char c2){
 	else
 		return 0;
 
+}
 
+void appendString(char *dest, const char *orig){
+
+	//Iterate through the original string first
+	while(*dest++);
+
+	//Go back to null terminator
+	dest--;
+
+	//Copy it at the end
+	while((*dest++ = *orig++));
+
+}
+
+//Clears a string
+void clearString(char *str){
+
+	*str = '\0';
 
 }

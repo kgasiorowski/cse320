@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-
 void strcopy(const char*, char*);
 int streq(const char*,const char*);
 int strleng(const char*);
@@ -17,5 +16,7 @@ int strcontains(const char *, const char);
 char *capitalizestring(char *);
 char *findStringInArray(const char c, char**);
 int cequals(const char c1, const char c2);
+void appendString(char *, const char *);
+void clearString(char *);
 
 #endif

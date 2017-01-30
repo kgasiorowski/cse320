@@ -4,11 +4,16 @@
 const char *vowels = "aeiouAEIOU";
 const char *consonants = "bcdfghjklmnpqrstvwyxzBCDFGHJKLMNPQRSTVWXYZ";
 
-const char *double_lower = "squa";
-const char *double_upper = "Squa";
+const char *double_cons_lower = "squa";
+const char *double_cons_upper = "Squa";
 
 const char *double_vowel_lower = "squat";
 const char *double_vowel_upper = "Squat";
+
+//Does nothing. Used to avoid unused variables
+void dummy(int i){
+	return;
+}
 
 //Vowels are written as-is
 void tutneseEncrypt(FILE *in, FILE *out){
@@ -69,11 +74,123 @@ void tutneseEncrypt(FILE *in, FILE *out){
 			}
 
 		}else{
-			//Double character
-			debug("\nDouble characters encountered: <%c> <%c>\n\n", c1, c2);
+			//Double characters encountered
+			debug("Double characters encountered: <%c><%c>\n", c1, c2);
 
-			fputc(c1, out);
-			fputc(c2, out);
+			//Clear our buffer
+			clearString(buffer);
+
+			debug("Buffer cleared\n");
+
+			if(strcontains(consonants, c1)){
+
+				//four cases we need to worry about
+				if(isUpper(c1) && isUpper(c2)){
+
+					debug("Both chars are uppercase <%c>\n", c1);
+
+					//Buffer is empty
+					strcopy(double_cons_upper, buffer);
+					debug("%s copied to buffer\n", double_cons_upper);
+
+					char *temp = findStringInArray(toLower(c1), Tutnese);
+
+					appendString(buffer, temp);
+					debug("Appended %s to buffer to get: %s\n", temp, buffer);
+
+					char c = *(buffer+4);
+					dummy((int)c); //Remove "unused" error
+
+					//Capitalize the second syllable
+					*(buffer+4) -= ('a' - 'A');
+					debug("Capitalized <%c> to <%c>\n", c, *(buffer+4));
+					debug("Final string: %s\n", buffer);
+
+					fputs(buffer, out);
+
+				}else if(isUpper(c1) && isLower(c2)){
+
+					debug("First char is uppercase <%c>, second lowercase <%c>\n", c1, c2);
+
+					strcopy(double_cons_upper, buffer);
+					debug("%s copied to buffer\n", double_cons_upper);
+
+					char *temp = findStringInArray(toLower(c1), Tutnese);
+
+					appendString(buffer, temp);
+
+					debug("Final string: %s\n", buffer);
+
+					fputs(buffer, out);
+
+				}else if(isLower(c1) && isUpper(c2)){
+
+					debug("First char is lowercase <%c>, second uppercase <%c>\n", c1, c2);
+
+					//Buffer is empty
+					strcopy(double_cons_lower, buffer);
+					debug("%s copied to buffer\n", double_cons_upper);
+
+					char *temp = findStringInArray(c1, Tutnese);
+
+					appendString(buffer, temp);
+					debug("Appended %s to buffer to get: %s\n", temp, buffer);
+
+					char c = *(buffer+4);
+					dummy((int)c); //Remove "unused" error
+
+					//Capitalize the second syllable
+					*(buffer+4) -= ('a' - 'A');
+					debug("Capitalized <%c> to <%c>\n", c, *(buffer+4));
+					debug("Final string: %s\n", buffer);
+
+					fputs(buffer, out);
+
+				}else if(isLower(c1) && isLower(c2)){
+
+					debug("Both chars are lowercase <%c>\n", c1);
+
+					strcopy(double_cons_lower, buffer);
+					debug("%s copied to buffer\n", );
+
+					char *temp = findStringInArray(c1, Tutnese);
+
+					appendString(buffer, temp);
+
+					debug("Final string: %s\n", buffer);
+
+					fputs(buffer, out);
+
+				}
+
+			}else if(strcontains(vowels, c1)){
+
+				//four cases we need to worry about
+				if(isUpper(c1) && isUpper(c2)){
+
+					//Print upper, with
+
+				}else if(isUpper(c1) && isLower(c2)){
+
+
+
+				}else if(isLower(c1) && isUpper(c2)){
+
+
+
+				}else if(isLower(c1) && isLower(c2)){
+
+
+
+				}
+
+			}else{
+
+				// Just print them out normally for now
+				fputc(c1, out);
+				fputc(c2, out);
+
+			}
 
 		}
 

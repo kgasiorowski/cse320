@@ -7,9 +7,8 @@
 int strleng(const char *str){
 
 	register int count = 0; 	//Counter
-	const char *temp = str; 	//Copy the pointer, just so stuff doesn't get messed up
 
-	while(*temp++)
+	while(*str++)
 		count++;
 
 	return count;
@@ -40,7 +39,7 @@ int streq(const char *str1, const char *str2){
 int findIndex(const char c, const char* string)
 {
 
-	unsigned int index = 0;
+	int index = 0;
 
 	do{
 
@@ -69,7 +68,6 @@ char getChar(const int index, const char* string){
 }
 
 //Copies a string into another.
-//Returns address directly *after* where the copy took place
 void strcopy(const char *orig, char *dest){
 
 	while((*dest++ = *orig++));
@@ -136,22 +134,22 @@ char *capitalizestring(char *str){
 
 	strcopy(str, buffer);
 
-	debug("String copied into buffer: %s\n", buffer);
+	//debug("String copied into buffer: %s\n", buffer);
 
 	char c = *buffer;
-	debug("Scanned first char: %c\n", c);
+	//debug("Scanned first char: %c\n", c);
 
 	if(isLower(c)){
 
-		debug("String is lowercase\n");
-		debug("first char: %c\n", *buffer);
+		// debug("String is lowercase\n");
+		// debug("first char: %c\n", *buffer);
 
 		*buffer = c - ('a' - 'A');
 
-		debug("new first char: %c\n", *buffer);
+		// debug("new first char: %c\n", *buffer);
 
-	}else
-		debug("String is not lowercase\n");
+	}else;
+		// debug("String is not lowercase\n");
 
 
 
@@ -159,6 +157,7 @@ char *capitalizestring(char *str){
 
 }
 
+//Compares two characters ignoring case
 int cequals(const char c1, const char c2){
 
 	const int diff = 'a' - 'A';
@@ -189,7 +188,7 @@ void appendString(char *dest, const char *orig){
 	dest--;
 
 	//Copy it at the end
-	while((*dest++ = *orig++));
+	strcopy(orig, dest);
 
 }
 
@@ -206,5 +205,60 @@ void appendChar(char *dest, const char c){
 void clearString(char *str){
 
 	*str = '\0';
+
+}
+
+char *shiftStringRight(char *str){
+
+	//First, save intitial pointer
+	char *saved_pointer = str;
+
+	debug("Saved pointer: %p\n", (void*)saved_pointer);
+
+	while(*++str); //Go to the end of the string
+
+	debug("str points at (as int): %d at address %p\n", (int)*str, (void*)str);
+
+	//Str points at null terminator now
+	str--; //Str points at last char now
+
+	//debug("str now points at (as char): %c at address %p\n", *str, (void*)str);
+
+	char endChar = *str; //Save last char
+
+	// debug("char saved: %c (%d)\n", endChar, endChar);
+
+	do{
+
+		//debug("Putting char %c into place of %c\n", *(str-1), *str);
+
+		//Swap chars
+		*str = *(str-1);
+
+	}while(--str != saved_pointer);
+
+	*str = endChar;
+
+	// debug("Replaced last place with %c\n", endChar);
+	// debug("Returning pointer address: %p\n", (void*)str);
+
+	return str;
+
+}
+
+char *shiftStringLeft(char *str){
+
+	char *saved_pointer = str;
+	char saved_char = *str;
+
+	do
+
+		*str = *(str+1);
+
+	while(*(++str+1));
+
+	*str = saved_char;
+
+	return saved_pointer;
 
 }

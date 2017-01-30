@@ -8,7 +8,7 @@ void substitutionCipher(FILE *in, FILE *out, const int n){
 	//Initialize our char to zero
 	char c = '\0';
 
-	const char* alphabetCopy = Alphabet;
+	char* alphabetCopy = Alphabet;
 	const int alphabetLength = strleng(alphabetCopy);
 
 	//printf("\n\nFound alphabet %s : length %d\n\n", alphabetCopy, alphabetLength);
@@ -25,9 +25,12 @@ void substitutionCipher(FILE *in, FILE *out, const int n){
 }
 
 //Processes a character for substitution cipher
-void processSubChar(char *c, const char *alphabet, int alphabetLength, int shiftAmnt){
+void processSubChar(char *c, char *alphabet, int alphabetLength, int shiftAmnt){
 
 	int index = 0;
+
+	if(*c == EOF || *c == '\0')
+		return;
 
 	//Change lowercase to uppercase only
 	const int diff = 'a' - 'A';

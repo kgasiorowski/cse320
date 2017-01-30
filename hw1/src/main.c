@@ -33,6 +33,11 @@ int main(int argc, char **argv) {
 	    	const int n = mode & NVAL;
 	    	substitutionCipher(in, out, n);
 
+            int i = 0;
+            for(; i<n; i++)
+                shiftStringLeft(Alphabet);
+
+            info("Shifted alphabet: %s\n", Alphabet);
             info("shift amount: %d\n", n);
 
             if(streq(argv[3], "-"))
@@ -50,10 +55,15 @@ int main(int argc, char **argv) {
 	    }else{
 
 	    	//Decryption
-	    	const int n = -(mode & NVAL);
-	    	substitutionCipher(in, out, n);
+	    	const int n = (mode & NVAL);
+	    	substitutionCipher(in, out, -n);
 
-            info("shift amount: %d\n", -n);
+            int i = 0;
+            for(; i<n; i++)
+                shiftStringRight(Alphabet);
+
+            info("shift amount: %d\n", n);
+            info("Shifted alphabet: %s\n", Alphabet);
 
             if(streq(argv[3], "-"))
                 info("input file: %s\n", "STDIN");
@@ -77,7 +87,7 @@ int main(int argc, char **argv) {
 
         }else{
             //Decryption
-
+            tutneseDecrypt(in, out);
 
         }
 

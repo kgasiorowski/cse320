@@ -2,7 +2,7 @@
 #include <criterion/logging.h>
 #include "hw1.h"
 
-const char *alphabet = "ABCDEFG$";
+char *alphabet = "ABCDEFG$";
 int alphabetLength = 8;
 
 Test(SubstitutionTest_Suite, get_char){

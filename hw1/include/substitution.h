@@ -4,6 +4,6 @@
 #include <stdio.h>
 
 void substitutionCipher(FILE*, FILE*,const int);
-void processSubChar(char*, const char*, int, int);
+void processSubChar(char*, char*, int, int);
 
 #endif

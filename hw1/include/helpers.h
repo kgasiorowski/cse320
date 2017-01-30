@@ -17,6 +17,7 @@ char *capitalizestring(char *);
 char *findStringInArray(const char c, char**);
 int cequals(const char c1, const char c2);
 void appendString(char *, const char *);
+void appendChar(char *, const char);
 void clearString(char *);
 
 #endif

@@ -10,7 +10,7 @@ const char *double_cons_upper = "Squa";
 const char *double_vowel_lower = "squat";
 const char *double_vowel_upper = "Squat";
 
-//Does nothing. Used to avoid unused variables
+//Does nothing. Used to avoid unused variable errors
 void dummy(int i){
 	return;
 }
@@ -84,6 +84,8 @@ void tutneseEncrypt(FILE *in, FILE *out){
 
 			if(strcontains(consonants, c1)){
 
+				debug("Both chars consonants <%c> <%c>\n", c1, c2);
+
 				//four cases we need to worry about
 				if(isUpper(c1) && isUpper(c2)){
 
@@ -151,7 +153,7 @@ void tutneseEncrypt(FILE *in, FILE *out){
 					debug("Both chars are lowercase <%c>\n", c1);
 
 					strcopy(double_cons_lower, buffer);
-					debug("%s copied to buffer\n", );
+					debug("%s copied to buffer\n", buffer);
 
 					char *temp = findStringInArray(c1, Tutnese);
 
@@ -165,24 +167,30 @@ void tutneseEncrypt(FILE *in, FILE *out){
 
 			}else if(strcontains(vowels, c1)){
 
-				//four cases we need to worry about
-				if(isUpper(c1) && isUpper(c2)){
+				debug("Both chars are vowels <%c> <%c>\n", c1, c2);
 
-					//Print upper, with
+				//ftwo cases we gotta worry about
+				if(isUpper(c1)){
 
-				}else if(isUpper(c1) && isLower(c2)){
+					debug("First is upper: <%c>\n", c1);
 
+					strcopy(double_vowel_upper, buffer);
 
+				}else if(isLower(c1)){
 
-				}else if(isLower(c1) && isUpper(c2)){
+					debug("First is lower: <%c>\n", c1);
 
-
-
-				}else if(isLower(c1) && isLower(c2)){
-
-
+					strcopy(double_vowel_lower, buffer);
 
 				}
+
+				debug("Copied into buffer: %s\n", buffer);
+
+				appendChar(buffer, c2);
+
+				debug("Final buffer: %s\n", buffer);
+
+				fputs(buffer, out);
 
 			}else{
 

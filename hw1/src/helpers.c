@@ -193,6 +193,15 @@ void appendString(char *dest, const char *orig){
 
 }
 
+void appendChar(char *dest, const char c){
+
+	while(*dest++);
+
+	*(dest-1) = c;
+	*dest = '\0';
+
+}
+
 //Clears a string
 void clearString(char *str){
 

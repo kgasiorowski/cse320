@@ -215,23 +215,20 @@ void tutneseDecrypt(FILE *in, FILE *out){
 
 	while((c = fgetc(in)) != EOF){
 
-		clearString(buffer);
+		clearbuffer();
 
 		if(!strcontains(consonants, c)){
 
+			//It's a symbol or vowel
 			fputc(c, out);
 
 		}else{
 
-			if(isUpper(c)){
+			int i = 0;
+			for(; i < 3; i++)
+				appendChar(buffer, fgetc(in));
 
-
-
-			}else{
-
-
-
-			}
+			// if(streq(
 
 		}
 

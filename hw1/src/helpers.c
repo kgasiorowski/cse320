@@ -292,3 +292,26 @@ int stringToInt(char *str){
 	return total;
 
 }
+
+void clearbuffer(){
+
+	int i = 0;
+	while(i < 10)
+		*(buffer+(i++)) = '\0';
+
+}
+
+int compareStringToArray(const char* str, const char* const* arr){
+
+	int counter = 0;
+
+	while(*(arr+counter++)){
+
+		if(streq(str, *arr))
+			return counter;
+
+	}
+
+	return -1;
+
+}

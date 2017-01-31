@@ -22,5 +22,7 @@ void clearString(char *);
 char *shiftStringRight(char *);
 char *shiftStringLeft(char *);
 int stringToInt(char *);
+void clearbuffer();
+int compareStringToArray(const char *str, const char * const* array);
 
 #endif

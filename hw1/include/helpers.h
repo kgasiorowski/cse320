@@ -23,6 +23,6 @@ char *shiftStringRight(char *);
 char *shiftStringLeft(char *);
 int stringToInt(char *);
 void clearbuffer();
-int compareStringToArray(const char *str, const char * const* array);
+int compareStringToArray(const char *, const char * const*);
 
 #endif

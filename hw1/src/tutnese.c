@@ -224,8 +224,12 @@ void tutneseDecrypt(FILE *in, FILE *out){
 
 		}else{
 
+			//Put it in our buffer
+			appendChar(buffer, c);
+
+			//Scan in the next 2 chars, compare to syllable array
 			int i = 0;
-			for(; i < 3; i++)
+			for(; i < 2; i++)
 				appendChar(buffer, fgetc(in));
 
 			// if(streq(

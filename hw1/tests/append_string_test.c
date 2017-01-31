@@ -2,7 +2,7 @@
 #include <criterion/logging.h>
 #include "hw1.h"
 
-Test(AppendStringTesT_Suite, case1)
+Test(AppendStringTest_Suite, case1)
 {
 
 	char s1[256] = "Hello";
@@ -16,7 +16,7 @@ Test(AppendStringTesT_Suite, case1)
 }
 
 
-Test(AppendStringTesT_Suite, case2)
+Test(AppendStringTest_Suite, case2)
 {
 
 	char s1[256] = "";

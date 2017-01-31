@@ -21,5 +21,6 @@ void appendChar(char *, const char);
 void clearString(char *);
 char *shiftStringRight(char *);
 char *shiftStringLeft(char *);
+int stringToInt(char *);
 
 #endif

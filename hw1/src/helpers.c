@@ -262,3 +262,33 @@ char *shiftStringLeft(char *str){
 	return saved_pointer;
 
 }
+
+int isNumeric(char c){
+
+	return c <= '9' && c >='0';
+
+}
+
+int stringToInt(char *str){
+
+	int total = 0;
+	int counter = 0;
+	int length = strleng(str);
+	double power10 = 1;
+
+	while(*(++str));
+	str--;
+
+	for(; counter < length; counter++){
+
+		if(!isNumeric(*str))
+			return 0;
+
+		total += (*(str--) - '0') * power10;
+		power10 *= 10;
+
+	}
+
+	return total;
+
+}

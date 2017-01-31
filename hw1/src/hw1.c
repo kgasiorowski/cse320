@@ -40,7 +40,8 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 		if(argc == 6){
 
 			//Get the inputted number
-			if(sscanf(fifthArg, "%d", &n) == 0){
+			//if(sscanf(fifthArg, "%d", &n) == 0){
+			if((n = stringToInt(fifthArg)) == 0){
 				//Exit if no int can be scanned
 				return 0;
 			}

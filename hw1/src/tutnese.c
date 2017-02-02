@@ -209,33 +209,71 @@ void tutneseEncrypt(FILE *in, FILE *out){
 }
 
 
-void tutneseDecrypt(FILE *in, FILE *out){
+int tutneseDecrypt(FILE *in, FILE *out){
 
 	char c = '\0';
 
 	while((c = fgetc(in)) != EOF){
 
+		debug("Scanned char: %c\n", c);
+
 		clearbuffer();
 
-		if(!strcontains(consonants, c)){
+		debug("Buffer cleared\n");
+
+		if(!strcontains(consonants, c))
 
 			//It's a symbol or vowel
 			fputc(c, out);
 
-		}else{
+		else{
 
-			//Put it in our buffer
+			const char *syllable;
+
 			appendChar(buffer, c);
+			debug("Appended char %c to buffer: %s\n", c, buffer);
 
-			//Scan in the next 2 chars, compare to syllable array
+			if((syllable = findStringInArray(toLower(c), Tutnese)) == NULL)
+				//No syllable can be found. Just print the char to out.
+				fputc(c,out);
+
+			debug("Found syllable: %s\n", syllable);
+
+			int length = strleng(syllable);
+
+			debug("Length of syllable found: %d\n", length);
+
+			char temp;
 			int i = 0;
-			for(; i < 2; i++)
-				appendChar(buffer, fgetc(in));
+			for(; i < length-1; i++){
 
-			// if(streq(
+				if((temp = fgetc(in))== EOF)
+					return 0;
+
+				appendChar(buffer, temp);
+
+			}
+
+			debug("Scanned %d-1=%d chars into buffer: %s\n", length, length-1, buffer);
+
+			if(cmpstrIgnoreCase(buffer, syllable))
+			{
+
+				debug("Match found. Putting char %c into out file\n", c);
+				fputc(c, out);
+
+			}else{
+
+				//The syllable doesn't match what is found. Return fail
+				debug("No match found. Returning failure\n");
+				return 0;
+
+			}
 
 		}
 
 	}
+
+	return 1;
 
 }

@@ -4,6 +4,6 @@
 #include <stdio.h>
 
 void tutneseEncrypt(FILE *, FILE *);
-void tutneseDecrypt(FILE *, FILE *);
+int tutneseDecrypt(FILE *, FILE *);
 
 #endif

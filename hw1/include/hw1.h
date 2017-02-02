@@ -7,6 +7,7 @@
 #include "helpers.h"
 #include "substitution.h"
 #include "tutnese.h"
+#include "debug.h"
 
 /**
  * @brief Validates command line arguments passed to the program.

@@ -76,6 +76,6 @@ Test(CompareCharTest_Suite, case10){
 Test(CompareCharTest_Suite, case11){
 
 	const char c1 = '.', c2 = '.';
-	cr_assert(!cequals(c1, c2), "Symbola did not return false. %c : %c", c1, c2);
+	cr_assert(cequals(c1, c2), "Symbols did not return true. %c : %c", c1, c2);
 
 }

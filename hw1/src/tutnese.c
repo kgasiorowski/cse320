@@ -215,6 +215,7 @@ int tutneseDecrypt(FILE *in, FILE *out){
 
 	while((c = fgetc(in)) != EOF){
 
+		debug("\n");
 		debug("Scanned char: %c\n", c);
 
 		clearbuffer();
@@ -239,13 +240,13 @@ int tutneseDecrypt(FILE *in, FILE *out){
 
 			debug("Found syllable: %s\n", syllable);
 
-			int length = strleng(syllable);
+			int syllLength = strleng(syllable);
 
-			debug("Length of syllable found: %d\n", length);
+			debug("Length of syllable found: %d\n", syllLength);
 
 			char temp;
 			int i = 0;
-			for(; i < length-1; i++){
+			for(; i < syllLength-1; i++){
 
 				if((temp = fgetc(in))== EOF)
 					return 0;
@@ -254,13 +255,42 @@ int tutneseDecrypt(FILE *in, FILE *out){
 
 			}
 
-			debug("Scanned %d-1=%d chars into buffer: %s\n", length, length-1, buffer);
+			debug("Scanned %d-1=%d chars into buffer: %s\n", syllLength, syllLength-1, buffer);
 
 			if(cmpstrIgnoreCase(buffer, syllable))
 			{
 
 				debug("Match found. Putting char %c into out file\n", c);
 				fputc(c, out);
+
+				/*
+
+			}else if(cequals(*double_cons_lower, c)){
+
+				debug("Match not found. Checking against double char strings...\n");
+
+				debug("Scanning an additional %d chars...\n", strleng(double_cons_lower) - syllLength);
+
+				int i = 0;
+				//Calculate how many additional characters to scan
+				for(; i < strleng(double_cons_lower) - syllLength; i++){
+
+					if((temp = fgetc(in))== EOF){
+
+						return 0;
+
+					}
+
+					appendChar(buffer, temp);
+
+				}
+
+				debug("Buffer: %s\n", buffer);
+
+
+			}else if(cequals(*double_vowel_lower, c)){
+
+				*/
 
 			}else{
 

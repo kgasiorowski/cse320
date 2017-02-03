@@ -160,22 +160,7 @@ char *capitalizestring(char *str){
 //Compares two characters ignoring case
 int cequals(const char c1, const char c2){
 
-	const int diff = 'a' - 'A';
-
-	if(isUpper(c1) && isUpper(c2))
-		//Both are uppercase
-		return c1 == c2;
-	else if(isUpper(c1) && isLower(c2))
-		//First is upper, second is lower
-		return (c1+diff) == c2;
-	else if(isLower(c1) && isUpper(c2))
-		//First is lower, second is upper
-		return (c1-diff) == c2;
-	else if(isLower(c1) && isLower(c2))
-		//Both lowercase
-		return c1 == c2;
-	else
-		return 0;
+	return toLower(c1) == toLower(c2);
 
 }
 
@@ -213,24 +198,13 @@ char *shiftStringRight(char *str){
 	//First, save intitial pointer
 	char *saved_pointer = str;
 
-	debug("Saved pointer: %p\n", (void*)saved_pointer);
-
 	while(*++str); //Go to the end of the string
 
-	debug("str points at (as int): %d at address %p\n", (int)*str, (void*)str);
-
-	//Str points at null terminator now
 	str--; //Str points at last char now
-
-	//debug("str now points at (as char): %c at address %p\n", *str, (void*)str);
 
 	char endChar = *str; //Save last char
 
-	// debug("char saved: %c (%d)\n", endChar, endChar);
-
 	do{
-
-		//debug("Putting char %c into place of %c\n", *(str-1), *str);
 
 		//Swap chars
 		*str = *(str-1);
@@ -238,9 +212,6 @@ char *shiftStringRight(char *str){
 	}while(--str != saved_pointer);
 
 	*str = endChar;
-
-	// debug("Replaced last place with %c\n", endChar);
-	// debug("Returning pointer address: %p\n", (void*)str);
 
 	return str;
 

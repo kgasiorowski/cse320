@@ -8,6 +8,7 @@
 #include "substitution.h"
 #include "tutnese.h"
 #include "debug.h"
+#include "info.h"
 
 /**
  * @brief Validates command line arguments passed to the program.
@@ -22,13 +23,6 @@
  * @return Refer to homework document for the return value of this function.
  */
 char validargs(int argc, char **argv, FILE **in, FILE **out);
-
-
-#ifdef INFO
-	#define info(fmt, ...) do{fprintf(stderr, "INFO: %s:%s:%d " fmt, __FILE__, __FUNCTION__,__LINE__, ##__VA_ARGS__);}while(0)
-#else
-	#define info(fmt, ...)
-#endif
 
 #define USAGE(retcode) do{                                                        \
 fprintf(stderr, "%s\n",                                                           \

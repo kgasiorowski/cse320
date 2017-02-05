@@ -287,7 +287,7 @@ int tutneseDecrypt(FILE *in, FILE *out){
 
 				if(streqIgnoreCase(buffer, double_cons_lower)){
 
-					int consCase = isUpper(*buffer);
+					int squatCase = isUpper(*buffer);
 
 					debug("String match to double consonant: %s\n", buffer);
 					debug("Clearing buffer...\n");
@@ -333,28 +333,43 @@ int tutneseDecrypt(FILE *in, FILE *out){
 
 							debug("Syllable matched with buffer.\n");
 
-							fputc(consCase?toUpper(ctemp):toLower(ctemp), out);
+							fputc(squatCase?toUpper(ctemp):toLower(ctemp), out);
 							fputc(*buffer, out);
 
 							debug("Printed chars: %c %c\n", c, *buffer);
 
 						}else{
-							debug("Match not found. ERROR!\n");
-							return 0;
+							debug("Match not found. ERROR! - TODO: Check for double vowels here.\n");
+
+							//Move the cursor back
+							fseek(in, -strleng(syllable), SEEK_CUR);
+							debug("Moved back file cursor %d places\n", -strleng(syllable));
+
+							char temp = fgetc(in);
+							dummy(temp);
+							debug("Char scanned: %c\n", temp);
+
+							char nextVowel = fgetc(in);
+
+							debug("Next vowel scanned: %c\n", nextVowel);
+
+							if(nextVowel == EOF || !strcontains(vowels, nextVowel))
+								return 0;
+
+							debug("Writing chars: %c %c\n", squatCase?toUpper(nextVowel):toLower(nextVowel), nextVowel);
+
+							fputc(squatCase?toUpper(nextVowel):toLower(nextVowel), out);
+							fputc(nextVowel, out);
+
 						}
 
 					}
 
-				}else if(streqIgnoreCase(buffer, double_vowel_lower)){
-
-
-
-				}else
-					return 0;
+				}
 
 			}else{
 
-				//The syllable doesn't match what is found. Return fail
+				//The syllable doesn't match anything possible. Return fail
 				debug("No match found. Returning failure\n");
 				return 0;
 

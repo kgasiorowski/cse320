@@ -18,12 +18,12 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 
 	char * const* arguments = argv;
 
-	arguments++; //Skip program name
-	char *firstArg = 	*arguments++;
-	char *secondArg = 	*arguments++;
-	char *thirdArg = 	*arguments++;
-	char *fourthArg = 	*arguments++;
-	char *fifthArg = 	*arguments++;
+	//Skip program executable name
+	char *firstArg = 	*(arguments+1);
+	char *secondArg = 	*(arguments+2);
+	char *thirdArg = 	*(arguments+3);
+	char *fourthArg = 	*(arguments+4);
+	char *fifthArg = 	*(arguments+5);
 
 	//First check if the first arg is h.
 	if(streq(firstArg, "-h"))

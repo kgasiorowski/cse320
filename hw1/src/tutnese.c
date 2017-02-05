@@ -257,29 +257,27 @@ int tutneseDecrypt(FILE *in, FILE *out){
 
 			debug("Scanned %d-1=%d chars into buffer: %s\n", syllLength, syllLength-1, buffer);
 
-			if(cmpstrIgnoreCase(buffer, syllable))
+			if(streqIgnoreCase(buffer, syllable))
 			{
 
 				debug("Match found. Putting char %c into out file\n", c);
 				fputc(c, out);
 
-				/*
 
 			}else if(cequals(*double_cons_lower, c)){
 
 				debug("Match not found. Checking against double char strings...\n");
-
 				debug("Scanning an additional %d chars...\n", strleng(double_cons_lower) - syllLength);
+
+				//1 if it's upper. 0 if lower
+
 
 				int i = 0;
 				//Calculate how many additional characters to scan
 				for(; i < strleng(double_cons_lower) - syllLength; i++){
 
-					if((temp = fgetc(in))== EOF){
-
+					if((temp = fgetc(in))== EOF)
 						return 0;
-
-					}
 
 					appendChar(buffer, temp);
 
@@ -287,10 +285,72 @@ int tutneseDecrypt(FILE *in, FILE *out){
 
 				debug("Buffer: %s\n", buffer);
 
+				if(streqIgnoreCase(buffer, double_cons_lower)){
 
-			}else if(cequals(*double_vowel_lower, c)){
+					int consCase = isUpper(*buffer);
 
-				*/
+					debug("String match to double consonant: %s\n", buffer);
+					debug("Clearing buffer...\n");
+					clearbuffer();
+
+					// Read next char.
+					char ctemp = fgetc(in);
+
+					// See if there's a syllable that matches it
+					char *syllable;
+
+					if((syllable = findStringInArray(toLower(ctemp), Tutnese)) == NULL){
+
+						// If there isn't, just print the char.
+						debug("Syllable for char %c not found. Printing...\n", ctemp);
+						fputc(ctemp, out);
+
+					}else{
+
+						// if there is, read that many chars, and compare
+						debug("Syllable found for char %c: %s\n", ctemp, syllable);
+
+						appendChar(buffer, ctemp);
+
+						debug("Scanning %d more chars\n", strleng(syllable)-1);
+						debug("Buffer: %s\n", buffer);
+
+						char temp;
+						int i = 0;
+						for(; i < strleng(syllable)-1; i++)
+						{
+
+							if((temp = fgetc(in)) == EOF)
+								return 0;
+
+							appendChar(buffer, temp);
+
+							debug("Buffer: %s\n", buffer);
+
+						}
+
+						if(streqIgnoreCase(buffer, syllable)){
+
+							debug("Syllable matched with buffer.\n");
+
+							fputc(consCase?toUpper(ctemp):toLower(ctemp), out);
+							fputc(*buffer, out);
+
+							debug("Printed chars: %c %c\n", c, *buffer);
+
+						}else{
+							debug("Match not found. ERROR!\n");
+							return 0;
+						}
+
+					}
+
+				}else if(streqIgnoreCase(buffer, double_vowel_lower)){
+
+
+
+				}else
+					return 0;
 
 			}else{
 

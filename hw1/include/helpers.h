@@ -24,6 +24,7 @@ char *shiftStringLeft(char *);
 int stringToInt(char *);
 void clearbuffer();
 int compareStringToArray(const char *, const char * const*);
-int cmpstrIgnoreCase(const char*, const char*);
+int streqIgnoreCase(const char*, const char*);
+int strupper(const char*);
 
 #endif

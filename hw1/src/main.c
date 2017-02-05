@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
             if(!tutneseDecrypt(in, out))
             {
 
-                debug("Decryption failed.");
+                debug("Decryption failed.\n");
 
             }
 

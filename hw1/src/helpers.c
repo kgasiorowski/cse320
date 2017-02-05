@@ -89,7 +89,7 @@ int isLower(const char c){
 }
 
 //Finds and returns a string in an array of strings based on the first char
-char *findStringInArray(const char c, char *array[]){
+char *findStringInArray(const char c, char **array){
 
 	char *string = NULL;
 
@@ -287,12 +287,18 @@ int compareStringToArray(const char* str, const char* const* arr){
 
 }
 
-int cmpstrIgnoreCase(const char *str1, const char *str2){
+int streqIgnoreCase(const char *str1, const char *str2){
 
 	while(*str1 && *str2)
 		if(!cequals(*str1++, *str2++))
 			return 0;
 
 	return 1;
+
+}
+
+int strcapital(const char *str){
+
+	return isUpper(*str);
 
 }

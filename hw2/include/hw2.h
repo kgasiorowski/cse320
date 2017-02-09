@@ -1,12 +1,16 @@
+#ifndef HW2_H
+#define HW2_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "hw2.h"
 
 #define MAX_SIZE 256
 #define WORDLENGTH 50
 #define MAX_MISSPELLED_WORDS 5
+#define DEFAULT_INPUT stdin
+#define DEFAULT_OUTPUT stdout
 
 #define USAGE(return_code) do { \
     fprintf(stderr, "%s\n", \
@@ -22,8 +26,6 @@
 
 
 char DEFAULT_DICT_FILE[]= "dictionary.txt";
-FILE* DEFAULT_INPUT= stdin;
-FILE* DEFAULT_OUTPUT= stdout;
 struct dictionary* dict;
 struct misspelled_word* m_list;
 
@@ -134,3 +136,5 @@ bool foundMisspelledMatch(char* inputWord);
  * @return     boolean
  */
 bool foundDictMatch(char* inputWord);
+
+#endif

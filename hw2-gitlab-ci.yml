@@ -19,6 +19,7 @@ before_script:
 stages:
     - compile
 
-compile:
+build:
+    stage: compile
     script:
         - make clean all -C ${HWDIR}

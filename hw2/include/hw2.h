@@ -5,12 +5,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <ctype.h>
 
 #define MAX_SIZE 256
 #define WORDLENGTH 50
 #define MAX_MISSPELLED_WORDS 5
 #define DEFAULT_INPUT stdin
 #define DEFAULT_OUTPUT stdout
+#define DEFAULT_DICT_FILE "dictionary.txt"
 
 #define USAGE(return_code) do { \
     fprintf(stderr, "%s\n", \
@@ -24,8 +27,6 @@
         "\t-An\tAutomatically add n (in range 0-5) random misspellings for any word not in the dictionary.\n" \
 } while (0);
 
-
-char DEFAULT_DICT_FILE[]= "dictionary.txt";
 struct dictionary* dict;
 struct misspelled_word* m_list;
 

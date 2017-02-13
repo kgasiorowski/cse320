@@ -21,6 +21,7 @@ int main(int argc, char *argv[]){
     args.d = false;
     args.i = false;
     args.o = false;
+    args.h = false;
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
     // Make a loop index
 
@@ -32,18 +33,56 @@ int main(int argc, char *argv[]){
 
     char c = 0;
 
-    while((c = getopt(argc, argv, "")) != -1){
+    while((c = getopt(argc, argv, "h:o:i:d:A:")) != -1){
 
         switch(c){
 
+            case 'h':
+            fprintf(stderr, "h was passed!");
+            args.h = true;
+            break;
 
+            case 'i':
+            fprintf(stderr, "i was passed!");
+            args.i = true;
+            //strcpy(args.input, optarg);
+            break;
+
+            case 'o':
+            fprintf(stderr, "o was passed!");
+            args.o = true;
+            //strcpy(args.output, optarg);
+            break;
+
+            case 'd':
+            fprintf(stderr, "d was passed!");
+            args.d = true;
+            //strcpy(args.dictFile, optarg);
+            break;
+
+            case 'A':
+            //fprintf(stderr, "A was passed!");
+            break;
+
+            case '?':
+            //fprintf(stderr, "Parameter -%c had no argument\n", optopt);
+            USAGE(EXIT_FAILURE);
+            break;
 
         }
 
 
     }
 
+    return EXIT_SUCCESS;
+
     dFile = fopen(args.dictFile, "r");
+
+    if(args.h == true){
+
+        USAGE(EXIT_SUCCESS);
+
+    }
 
     if(iFile == NULL && args.i == true)
     {

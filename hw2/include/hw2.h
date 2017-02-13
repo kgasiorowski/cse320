@@ -18,19 +18,20 @@
 #define USAGE(return_code) do { \
     fprintf(stderr, "%s\n", \
         "Usage: spell [-h] [-o OUT_FILE] [-i IN_FILE] [-d DICT_FILE] [-An]\n" \
-        "Spell Checker using a custom dictionary. Auto corrects any known misspellings in the text.\n"); \
+        "Spell Checker using a custom dictionary. Auto corrects any known misspellings in the text.\n" \
         "Additional function to add new words and randomized misspellings to the dictionary.\n\n" \
         "\t-h\tDisplays this usage.\n" \
         "\t-o\tOUT_FILE filename, if omitted output to stdout\n" \
         "\t-i\tIN_FILE filename, if omitted input comes from stdin (CTRL+D to end input)\n" \
         "\t-d\tfor the dictionary filename, if omitted use default 'rsrc/dictionary.txt'\n" \
-        "\t-An\tAutomatically add n (in range 0-5) random misspellings for any word not in the dictionary.\n" \
-} while (0);
+        "\t-An\tAutomatically add n (in range 0-5) random misspellings for any word not in the dictionary.\n" ); \
+} while (0)
 
 struct dictionary* dict;
 struct misspelled_word* m_list;
 
 struct Args{
+    bool h;
     bool d;
     bool i;
     bool o;
@@ -38,6 +39,8 @@ struct Args{
     char dictFile[MAX_SIZE];
     char input[MAX_SIZE];
     char output[MAX_SIZE];
+
+    int n
 };
 
 struct dictionary{

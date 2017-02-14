@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
     args.d = false;
     args.i = false;
     args.o = false;
-    args.h = false;
+    args.n = 0;
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
     // Make a loop index
 
@@ -33,40 +33,62 @@ int main(int argc, char *argv[]){
 
     char c = 0;
 
-    while((c = getopt(argc, argv, "h:o:i:d:A:")) != -1){
+    while((c = getopt(argc, argv, "ho:i:d:A:")) != -1){
 
         switch(c){
 
             case 'h':
-            fprintf(stderr, "h was passed!");
-            args.h = true;
+            
+                fprintf(stderr, "h was passed!\n");
+                USAGE(EXIT_SUCCESS);
+            
             break;
 
             case 'i':
-            fprintf(stderr, "i was passed!");
-            args.i = true;
-            //strcpy(args.input, optarg);
+            
+                fprintf(stderr, "i was passed!\n");
+                fprintf(stderr, "Input file: %s\n", optarg);
+                args.i = true;
+                strcpy(args.input, optarg);
+                iFile = fopen(args.input, "r");
+
             break;
 
             case 'o':
-            fprintf(stderr, "o was passed!");
-            args.o = true;
-            //strcpy(args.output, optarg);
+
+                fprintf(stderr, "o was passed!\n");
+                fprintf(stderr, "Output file: %s\n", optarg);
+                args.o = true;
+                strcpy(args.output, optarg);
+                oFile = fopen(args.output, "w");
+
             break;
 
             case 'd':
-            fprintf(stderr, "d was passed!");
-            args.d = true;
-            //strcpy(args.dictFile, optarg);
+
+                fprintf(stderr, "d was passed!\n");
+                fprintf(stderr, "Dictionary file: %s\n", optarg);
+                args.d = true;
+                strcpy(args.dictFile, optarg);
+
             break;
 
             case 'A':
-            //fprintf(stderr, "A was passed!");
+
+                fprintf(stderr, "A was passed!\n");
+                if((args.n = atoi(optarg)) <= 0)
+                    USAGE(EXIT_FAILURE);
+
+                fprintf(stderr, "N value passed: %d\n", args.n);
+
             break;
 
             case '?':
-            //fprintf(stderr, "Parameter -%c had no argument\n", optopt);
-            USAGE(EXIT_FAILURE);
+            
+                //fprintf(stderr, "Parameter -%c had no argument\n", optopt);
+                fprintf(stderr, "? CASE\n");
+                USAGE(EXIT_FAILURE);
+            
             break;
 
         }
@@ -74,15 +96,7 @@ int main(int argc, char *argv[]){
 
     }
 
-    return EXIT_SUCCESS;
-
     dFile = fopen(args.dictFile, "r");
-
-    if(args.h == true){
-
-        USAGE(EXIT_SUCCESS);
-
-    }
 
     if(iFile == NULL && args.i == true)
     {

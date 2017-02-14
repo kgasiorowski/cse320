@@ -25,13 +25,13 @@
         "\t-i\tIN_FILE filename, if omitted input comes from stdin (CTRL+D to end input)\n" \
         "\t-d\tfor the dictionary filename, if omitted use default 'rsrc/dictionary.txt'\n" \
         "\t-An\tAutomatically add n (in range 0-5) random misspellings for any word not in the dictionary.\n" ); \
+exit(return_code); \
 } while (0)
 
 struct dictionary* dict;
 struct misspelled_word* m_list;
 
 struct Args{
-    bool h;
     bool d;
     bool i;
     bool o;
@@ -40,7 +40,7 @@ struct Args{
     char input[MAX_SIZE];
     char output[MAX_SIZE];
 
-    int n
+    int n;
 };
 
 struct dictionary{

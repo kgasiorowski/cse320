@@ -34,31 +34,38 @@ typedef struct Args{
     char dictFile[MAX_SIZE];
     char input[MAX_SIZE];
     char output[MAX_SIZE];
-
     int n;
+
 }Args;
 
 typedef struct dict_word{
+
     char word[WORDLENGTH];
     int misspelled_count; // initialize to 0
     int num_misspellings; // initialize to 0
     struct misspelled_word* misspelled[MAX_MISSPELLED_WORDS];
     struct dict_word* next;
+
 }Dict_word;
 
 typedef struct misspelled_word{
+
     char word[WORDLENGTH];
     int misspelled; // initialize to 0
+    
     struct dict_word* correct_word;
     struct misspelled_word* next;
+
 }Misspelled_word;
 
 typedef struct dictionary{
+
     int num_words;
     Dict_word* word_list;
+
 }Dictionary;
 
-Dictionary* dict;
+Dictionary *dict;
 Misspelled_word* m_list;
 
 /**
@@ -77,8 +84,6 @@ void processDictionary(FILE* f);
  */
 void addWord(struct dict_word* dWord, char* word);
 
-
-
 /**
  * @brief      Adds a misspelled word.
  *
@@ -88,15 +93,12 @@ void addWord(struct dict_word* dWord, char* word);
  */
 void addMisspelledWord(struct misspelled_word * misspelledWord, struct dict_word* correctWord, char* word);
 
-
 /**
  * @brief      free the words
  *
  * @param      word  The word
  */
 void freeWords(struct dict_word* word);
-
-
 
 /**
  * @brief      Print the words
@@ -106,16 +108,12 @@ void freeWords(struct dict_word* word);
  */
 void printWords(struct dict_word* word, FILE* f);
 
-
-
 /**
  * @brief      Process a word
  *
  * @param      inputWord  The input word
  */
-void processWord(char* inputWord);
-
-
+void processWord(char* inputWord, int n);
 
 /**
  * @brief      find the misspelling
@@ -125,8 +123,6 @@ void processWord(char* inputWord);
  * @return     boolean
  */
 bool foundMisspelledMatch(char* inputWord);
-
-
 
 /**
  * @brief      find match in dictionary

@@ -38,17 +38,11 @@ int main(int argc, char *argv[]){
 
             case 'h':
             
-                //debug("h was passed!\n");
                 USAGE(EXIT_SUCCESS);
             
             break;
 
             case 'i':
-            
-                //fprintf(stderr, "i was passed!\n");
-                //fprintf(stderr, "Input file: %s\n", optarg);
-                
-                //args.i = true;
                 
                 strcpy(args.input, optarg);
                 iFile = fopen(args.input, "r");
@@ -56,11 +50,6 @@ int main(int argc, char *argv[]){
             break;
 
             case 'o':
-
-                //fprintf(stderr, "o was passed!\n");
-                //fprintf(stderr, "Output file: %s\n", optarg);
-                
-                //args.o = true;
                 
                 strcpy(args.output, optarg);
                 oFile = fopen(args.output, "w");
@@ -68,11 +57,6 @@ int main(int argc, char *argv[]){
             break;
 
             case 'd':
-
-                //fprintf(stderr, "d was passed!\n");
-                //fprintf(stderr, "Dictionary file: %s\n", optarg);
-                
-                //args.d = true;
                 
                 strcpy(args.dictFile, optarg);
                 dFile = fopen(args.dictFile, "r");
@@ -81,19 +65,14 @@ int main(int argc, char *argv[]){
 
             case 'A':
 
-                //fprintf(stderr, "A was passed!\n");
                 args.n = atoi(optarg);
                 if(args.n < 0 || args.n > 5)
                     USAGE(EXIT_FAILURE);
-
-                //fprintf(stderr, "N value passed: %d\n", args.n);
 
             break;
 
             case '?':
             
-                //fprintf(stderr, "Parameter -%c had no argument\n", optopt);
-                //fprintf(stderr, "? CASE\n");
                 USAGE(EXIT_FAILURE);
             
             break;
@@ -125,7 +104,7 @@ int main(int argc, char *argv[]){
     else
     {
 
-         debug("Created/opened output file: %s\n", args.output);
+        debug("Created/opened output file: %s\n", args.output);
 
     }
 
@@ -182,7 +161,7 @@ int main(int argc, char *argv[]){
                 wdPtr = NULL;
                 wdPtr = word;
 
-                processWord(wdPtr);
+                processWord(wdPtr, args.n);
 
                 strcat(wdPtr, " ");
                 fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);

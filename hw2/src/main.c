@@ -16,18 +16,17 @@ int main(int argc, char *argv[]){
     }
     m_list = NULL;
 
-    struct Args args;
+    Args args;
     // Set struct default values
-    args.d = false;
-    args.i = false;
-    args.o = false;
     args.n = 0;
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
+    strcpy(args.input, "stdin");
+    strcpy(args.output, "stdout");
     // Make a loop index
 
     char line[MAX_SIZE];
     //Declare Files
-    FILE* dFile;
+    FILE* dFile = fopen(DEFAULT_DICT_FILE, "r");
     FILE* iFile = DEFAULT_INPUT;
     FILE* oFile = DEFAULT_OUTPUT;
 
@@ -39,16 +38,18 @@ int main(int argc, char *argv[]){
 
             case 'h':
             
-                fprintf(stderr, "h was passed!\n");
+                //debug("h was passed!\n");
                 USAGE(EXIT_SUCCESS);
             
             break;
 
             case 'i':
             
-                fprintf(stderr, "i was passed!\n");
-                fprintf(stderr, "Input file: %s\n", optarg);
-                args.i = true;
+                //fprintf(stderr, "i was passed!\n");
+                //fprintf(stderr, "Input file: %s\n", optarg);
+                
+                //args.i = true;
+                
                 strcpy(args.input, optarg);
                 iFile = fopen(args.input, "r");
 
@@ -56,9 +57,11 @@ int main(int argc, char *argv[]){
 
             case 'o':
 
-                fprintf(stderr, "o was passed!\n");
-                fprintf(stderr, "Output file: %s\n", optarg);
-                args.o = true;
+                //fprintf(stderr, "o was passed!\n");
+                //fprintf(stderr, "Output file: %s\n", optarg);
+                
+                //args.o = true;
+                
                 strcpy(args.output, optarg);
                 oFile = fopen(args.output, "w");
 
@@ -66,27 +69,31 @@ int main(int argc, char *argv[]){
 
             case 'd':
 
-                fprintf(stderr, "d was passed!\n");
-                fprintf(stderr, "Dictionary file: %s\n", optarg);
-                args.d = true;
+                //fprintf(stderr, "d was passed!\n");
+                //fprintf(stderr, "Dictionary file: %s\n", optarg);
+                
+                //args.d = true;
+                
                 strcpy(args.dictFile, optarg);
+                dFile = fopen(args.dictFile, "r");
 
             break;
 
             case 'A':
 
-                fprintf(stderr, "A was passed!\n");
-                if((args.n = atoi(optarg)) <= 0)
+                //fprintf(stderr, "A was passed!\n");
+                args.n = atoi(optarg);
+                if(args.n < 0 || args.n > 5)
                     USAGE(EXIT_FAILURE);
 
-                fprintf(stderr, "N value passed: %d\n", args.n);
+                //fprintf(stderr, "N value passed: %d\n", args.n);
 
             break;
 
             case '?':
             
                 //fprintf(stderr, "Parameter -%c had no argument\n", optopt);
-                fprintf(stderr, "? CASE\n");
+                //fprintf(stderr, "? CASE\n");
                 USAGE(EXIT_FAILURE);
             
             break;
@@ -96,28 +103,49 @@ int main(int argc, char *argv[]){
 
     }
 
-    dFile = fopen(args.dictFile, "r");
-
-    if(iFile == NULL && args.i == true)
+    if(iFile == NULL)
     {
 
-        printf("Unable to open: %s.\n", args.input);
+        debug("Unable to open: %s.\n", args.input);
         return EXIT_FAILURE;
+
+    }
+    else
+    {
+
+        debug("Opened input file: %s\n", args.input);
+
+    }
+
+    if(oFile == NULL){
+
+        debug("Unable to open/create: %s.\n", args.output);
+
+    }
+    else
+    {
+
+         debug("Created/opened output file: %s\n", args.output);
 
     }
 
     if(dFile == NULL)
     {
 
-        printf("Unable to open: %s.\n", args.dictFile);
+        debug("Unable to open: %s.\n", args.dictFile);
+        return EXIT_FAILURE;
 
     }
     else
     {
 
+        debug("Opened dictionary file: %s\n", args.dictFile);
+        debug("%s", "Processing dictionary file...\n");
         processDictionary(dFile);
 
     }
+
+    return 0;
 
     strcpy(line,"\n--------INPUT FILE WORDS--------\n");
     fwrite(line, strlen(line)+1, 1, oFile);

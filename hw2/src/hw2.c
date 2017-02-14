@@ -3,26 +3,37 @@
 /* Great filename. */
 
 void processDictionary(FILE* f){
+    
+    debug("%s\n", "Entered processDictionary");
+    
     dict->num_words = 0;
+    
+    debug("%s\n", "Initialized number of words in dictionary to 0");
+
     while(!feof(f))
     {
         //initialize the current word.
-        struct dict_word* currWord;
-        if((currWord = (struct dict_word*) malloc(sizeof(struct dict_word))) == NULL)
+        Dict_word* currWord;
+        
+        if((currWord = (Dict_word*) malloc(sizeof(Dict_word))) == NULL)
         {
             printf("OUT OF MEMORY.\n");
             return;
         }
 
+        debug("%d\n", 1);
+
         currWord->num_misspellings = 0;
         currWord->misspelled_count = 0;
 
+        debug("%d\n", 2);
+
         //variables
         char word[MAX_SIZE];
-        char* wdPtr = word;
+        char *wdPtr = word;
 
         char line[MAX_SIZE];
-        char* character = line;
+        char *character = line;
 
         //char word_list[MAX_MISSPELLED_WORDS+1][MAX_SIZE];
 
@@ -31,33 +42,51 @@ void processDictionary(FILE* f){
 
         fgets(line, MAX_SIZE+1, f);
         //if there isn't a space at the end of the line, put one there
+
+        debug("Line scanned: <%s>\n", line);
+
         if((line[strlen(line)-2] != ' ' && line[strlen(line)-1] == '\n') || (line[strlen(line)-1] != ' ' && line[strlen(line)-1] != '\n'))
             strcat(line, " ");
+
+        debug("Line modified: <%s>\n", line);
 
         while(character != NULL)
         {
             if(counter >= MAX_MISSPELLED_WORDS+1)
                 break;
             //if the character is a space, add the word in word_list and make word NULL.
+
+            debug("%d\n", 5);
+
+            return;
+
             if(*character == ' ')
             {
 
+                debug("%d\n", 6);
+
                 wdPtr = NULL;
                 wdPtr = word;
+                
                 if(firstWord)
                 {
                     addWord(currWord, wdPtr);
                     dict->num_words++;
 
                     firstWord = 0;
+
                 }
                 else
                 {
-                    struct misspelled_word* currMisspelling;
-                    if((currMisspelling = malloc(sizeof(struct misspelled_word))) == NULL)
+                    
+                    Misspelled_word* currMisspelling;
+                    
+                    if((currMisspelling = malloc(sizeof(Misspelled_word))) == NULL)
                     {
+
                         printf("ERROR: OUT OF MEMORY.");
                         return;
+                    
                     }
 
                     addMisspelledWord(currMisspelling, currWord, wdPtr);
@@ -65,7 +94,9 @@ void processDictionary(FILE* f){
             }
             //if the character isn't a space or a new line, add the character to word.
             else if(*character != '\n')
+            
                 *(wdPtr++) = *character;
+            
             character++;
         }
     }

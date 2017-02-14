@@ -7,13 +7,14 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <ctype.h>
+#include "debug.h"
 
 #define MAX_SIZE 256
 #define WORDLENGTH 50
 #define MAX_MISSPELLED_WORDS 5
 #define DEFAULT_INPUT stdin
 #define DEFAULT_OUTPUT stdout
-#define DEFAULT_DICT_FILE "dictionary.txt"
+#define DEFAULT_DICT_FILE "rsrc/dictionary.txt"
 
 #define USAGE(return_code) do { \
     fprintf(stderr, "%s\n", \
@@ -28,42 +29,37 @@
 exit(return_code); \
 } while (0)
 
-struct dictionary* dict;
-struct misspelled_word* m_list;
-
-struct Args{
-    bool d;
-    bool i;
-    bool o;
+typedef struct Args{
 
     char dictFile[MAX_SIZE];
     char input[MAX_SIZE];
     char output[MAX_SIZE];
 
     int n;
-};
+}Args;
 
-struct dictionary{
-    int num_words;
-    struct dict_word* word_list;
-};
-
-struct dict_word{
+typedef struct dict_word{
     char word[WORDLENGTH];
     int misspelled_count; // initialize to 0
     int num_misspellings; // initialize to 0
     struct misspelled_word* misspelled[MAX_MISSPELLED_WORDS];
     struct dict_word* next;
-};
+}Dict_word;
 
-struct misspelled_word{
+typedef struct misspelled_word{
     char word[WORDLENGTH];
     int misspelled; // initialize to 0
     struct dict_word* correct_word;
     struct misspelled_word* next;
-};
+}Misspelled_word;
 
+typedef struct dictionary{
+    int num_words;
+    Dict_word* word_list;
+}Dictionary;
 
+Dictionary* dict;
+Misspelled_word* m_list;
 
 /**
  * @brief      read in dictionary

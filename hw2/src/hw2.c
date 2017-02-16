@@ -31,9 +31,11 @@ void processDictionary(FILE* f){
         //variables
         char word[MAX_SIZE];
         char *wdPtr = word;
+        memset(word, 0, sizeof(char)*MAX_SIZE); //Initialize to zero
 
         char line[MAX_SIZE];
         char *character = line;
+        memset(word, 0, sizeof(char)*MAX_SIZE); //Initialize to zero
 
         //char word_list[MAX_MISSPELLED_WORDS+1][MAX_SIZE];
 
@@ -50,27 +52,39 @@ void processDictionary(FILE* f){
 
         debug("Line modified: <%s>\n", line);
 
-        while(character != NULL)
+        while(*character != 0)
         {
+
+            debug("Current character: %c\n", *character);
+            debug("Currently stored in word: %s\n", word);
+
             if(counter >= MAX_MISSPELLED_WORDS+1)
                 break;
+            
             //if the character is a space, add the word in word_list and make word NULL.
-
-            debug("%d\n", 5);
-
-            //return;
-
             if(*character == ' ')
             {
 
-                debug("%d\n", 6);
+                debug("%s", "Space encountered\n");
+                debug("%s", "Clearing word buffer\n");
 
-                wdPtr = NULL;
+                //Clear and reset word buffer
+                memset(word, 0, sizeof(char)*MAX_SIZE);
                 wdPtr = word;
                 
+                //Word was found, increment word counter
+                counter++;
+                
+
                 if(firstWord)
                 {
+
+                    debug("%s", "First word encountered\n");
+
+                    debug("%s","Adding word...\n");
                     addWord(currWord, wdPtr);
+                    debug("%s", "Added word\n");
+
                     dict->num_words++;
 
                     firstWord = 0;
@@ -81,6 +95,8 @@ void processDictionary(FILE* f){
                     
                     Misspelled_word* currMisspelling;
                     
+                    debug("%s", "Not first word. Adding misspelling...\n");
+
                     if((currMisspelling = malloc(sizeof(Misspelled_word))) == NULL)
                     {
 
@@ -90,11 +106,13 @@ void processDictionary(FILE* f){
                     }
 
                     addMisspelledWord(currMisspelling, currWord, wdPtr);
+                    debug("%s", "Added misspelling\n");
+
                 }
+
             }
             //if the character isn't a space or a new line, add the character to word.
             else if(*character != '\n')
-            
                 *(wdPtr++) = *character;
             
             character++;
@@ -103,6 +121,7 @@ void processDictionary(FILE* f){
 }
 
 void addWord(Dict_word* dWord, char* word){
+    
     //setting up dWord fields
     dWord->misspelled_count = 0;
     
@@ -116,7 +135,9 @@ void addWord(Dict_word* dWord, char* word){
 }
 
 void addMisspelledWord(Misspelled_word* misspelledWord, Dict_word* correctWord, char* word){
-    //setting up misspelledWord fields
+    
+
+                            //setting up misspelledWord fields
     strcpy(misspelledWord->word, word);
 
     misspelledWord->misspelled = 0;

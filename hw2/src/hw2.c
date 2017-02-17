@@ -1,10 +1,12 @@
 #include "hw2.h"
+#include "misspelling.h"
 
 /* Great filename. */
 
 Dictionary dict;
 Misspelled_word *m_list;
 
+//WORKS
 void processDictionary(FILE* f){
     
     debug("%s\n", "Entered processDictionary");
@@ -120,6 +122,7 @@ void processDictionary(FILE* f){
     }
 }
 
+//WORKS
 void addWord(Dict_word* dWord, char* word){
     
     //setting up dWord fields
@@ -146,6 +149,7 @@ void addWord(Dict_word* dWord, char* word){
 
 }
 
+//WORKS
 void addMisspelledWord(Misspelled_word* misspelledWord, Dict_word* correctWord, char* word){
     
     //setting up misspelledWord fields
@@ -172,6 +176,7 @@ void addMisspelledWord(Misspelled_word* misspelledWord, Dict_word* correctWord, 
 
 }
 
+//WORKS
 void freeWords(Dict_word* currWord){
     if(currWord != NULL)
     {
@@ -185,6 +190,7 @@ void freeWords(Dict_word* currWord){
     }
 }
 
+//WORKS
 void printWords(Dict_word* currWord, FILE* f){
 
     while(currWord != NULL){
@@ -228,6 +234,7 @@ void printWords(Dict_word* currWord, FILE* f){
 
 }
 
+//TODO!!!!!!!!!!!!!
 void processWord(char* inputWord, int n){
     if(foundMisspelledMatch(inputWord))
         return;
@@ -246,7 +253,6 @@ void processWord(char* inputWord, int n){
         }
 
         addWord(newWord, inputWord);
-        dict.word_list = newWord;
 
         int numMisspellings=n;
 
@@ -264,6 +270,13 @@ void processWord(char* inputWord, int n){
             }
 
             // TODO remove user interactivity
+            // TODO ADD CALL FROM MISSPELLING.H
+
+            char **misspellingsArray= gentypos(n, inputWord);
+
+            //TODO - create new misspelled word object for each new misspelling
+            //Pass it and the other stuff into addMisspelledWord
+
             // Generate a misspelling via randomness
             //printf("Enter misspelling: ");
 
@@ -277,13 +290,14 @@ void processWord(char* inputWord, int n){
     }
 }
 
+//WORKS ?
 bool foundMisspelledMatch(char* inputWord){
     Misspelled_word* cursor = m_list;
     while(cursor != NULL)
     {
         if(strcasecmp(inputWord, cursor->word) == 0)
         {
-            strcpy(inputWord, cursor->correct_word->word);
+            strcpy(inputWord, cursor->correct_word->word); //What is this line for?
             cursor->misspelled = 1;
             cursor->correct_word->misspelled_count++;
             return true;
@@ -293,6 +307,7 @@ bool foundMisspelledMatch(char* inputWord){
     return false;
 }
 
+//WORKS ?
 bool foundDictMatch(char* inputWord){
     struct dict_word* cursor = dict.word_list;
     while(cursor != NULL)
@@ -304,6 +319,7 @@ bool foundDictMatch(char* inputWord){
     return false;
 }
 
+//WORKS
 int stringtoint(char *str){
 
     int rtn = 0;
@@ -317,6 +333,7 @@ int stringtoint(char *str){
 
 }
 
+//WORKS
 void testPrintDictionaryWords(){
 
     debug("%s", "Entered test print dictionary words\n");
@@ -333,6 +350,7 @@ void testPrintDictionaryWords(){
 
 }
 
+//WORKS
 void testPrintMisspelledWords(){
 
     debug("%s", "Entered test print misspelled words\n");

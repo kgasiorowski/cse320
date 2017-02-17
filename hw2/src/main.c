@@ -178,10 +178,10 @@ int main(int argc, char *argv[]){
                 debug("wdPtr points at: %s\n", wdPtr);
 
                 //Don't process the word for now
-                //processWord(wdPtr, args.n);
+                processWord(wdPtr, args.n);
 
                 strcat(wdPtr, " ");
-                fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);
+                fprintf(oFile, "%s", wdPtr);
 
                 memset(word, 0, sizeof(char)*MAX_SIZE);
 

@@ -124,7 +124,7 @@ int main(int argc, char *argv[]){
 
     }
 
-    return 0;
+    debug("%s", "Finished processing dictionary\n");
 
     strcpy(line,"\n--------INPUT FILE WORDS--------\n");
     fwrite(line, strlen(line)+1, 1, oFile);
@@ -137,28 +137,44 @@ int main(int argc, char *argv[]){
         //char line[MAX_SIZE];
         char* character = line;
 
+        //Initialize char arrays to zero
+        memset(line, 0, sizeof(char)*MAX_SIZE);
+        memset(word, 0, sizeof(char)*MAX_SIZE);
+
         fgets(line, MAX_SIZE+1, iFile);
+
+        debug("Current content in line: <%s>\n", line);
 
         //if there isn't a space or newline at the end of the line, put one there
         if((line[strlen(line)-1] != ' ') && (line[strlen(line)-1] != '\n'))
             strcat(line, " ");
+
+        debug("Current content in line: <%s>\n", line);
+
         //replaces spaces within a line with new lines
-        while(character != NULL)
+        while(*character != 0)
         {
+
+            debug("Current char: %c\n", *character);
 
             if(*character == ' ' || *character == '\n')
             {
-                /*char* punct = wdPtr-1;
-                    printf("char:%c",punct);
+                
+                debug("%s", "Entered if\n");
+
+                char* punct = wdPtr-1;
+                printf("char:%c", *punct);
+                
                 while(!((*punct>='a' && *punct<='z') || (*punct>='A' && *punct<='Z')))
                 {
                     punct--;
                 }
+                
                 punct++;
-                printf("%d", strlen(wdPtr)-strlen(punct));
-                */
+                printf(" %d\n", (int)(strlen(wdPtr)-strlen(punct)));
+                
 
-                wdPtr = NULL;
+                memset(word, 0, sizeof(char)*MAX_SIZE);
                 wdPtr = word;
 
                 processWord(wdPtr, args.n);
@@ -186,7 +202,7 @@ int main(int argc, char *argv[]){
     fwrite(line, strlen(line)+1, 1, oFile);
     printWords(dict->word_list , oFile);
 
-    //printf("\n--------FREED WORDS--------\n");
+    printf("\n--------FREED WORDS--------\n");
     freeWords(dict->word_list);
     //free dictionary
     free(dict);

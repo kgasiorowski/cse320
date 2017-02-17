@@ -21,12 +21,12 @@ void processDictionary(FILE* f){
             return;
         }
 
-        debug("%d\n", 1);
+        //debug("%d\n", 1);
 
         currWord->num_misspellings = 0;
         currWord->misspelled_count = 0;
 
-        debug("%d\n", 2);
+        //debug("%d\n", 2);
 
         //variables
         char word[MAX_SIZE];

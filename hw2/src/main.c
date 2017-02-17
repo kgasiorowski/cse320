@@ -1,20 +1,14 @@
 #include "hw2.h"
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]){    
 
-    //create dictionary
-    if((dict = (struct dictionary*) malloc(sizeof(struct dictionary))) == NULL)
+    /*if((m_list = (struct misspelled_word*) malloc(sizeof(struct misspelled_word*))) == NULL)
     {
         printf("ERROR: OUT OF MEMORY.\n");
         return EXIT_FAILURE;
-    }
+    }*/
 
-    if((m_list = (struct misspelled_word*) malloc(sizeof(struct misspelled_word*))) == NULL)
-    {
-        printf("ERROR: OUT OF MEMORY.\n");
-        return EXIT_FAILURE;
-    }
-    m_list = NULL;
+
 
     Args args;
     // Set struct default values
@@ -65,7 +59,7 @@ int main(int argc, char *argv[]){
 
             case 'A':
 
-                args.n = atoi(optarg);
+                args.n = stringtoint(optarg);
                 if(args.n < 0 || args.n > 5)
                     USAGE(EXIT_FAILURE);
 
@@ -125,9 +119,14 @@ int main(int argc, char *argv[]){
     }
 
     debug("%s", "Finished processing dictionary\n");
+    debug("Number of words in dictionary: %d\n", dict.num_words);
 
-    strcpy(line,"\n--------INPUT FILE WORDS--------\n");
-    fwrite(line, strlen(line)+1, 1, oFile);
+    testPrintDictionaryWords();
+    testPrintMisspelledWords();
+
+    // return 0;
+
+    fprintf(oFile, "\n--------INPUT FILE WORDS--------\n");
 
     while(!feof(iFile))
     {
@@ -156,6 +155,7 @@ int main(int argc, char *argv[]){
         {
 
             debug("Current char: %c\n", *character);
+            debug("Current contents in word: %s\n", word);
 
             if(*character == ' ' || *character == '\n')
             {
@@ -173,14 +173,17 @@ int main(int argc, char *argv[]){
                 punct++;
                 printf(" %d\n", (int)(strlen(wdPtr)-strlen(punct)));
                 
-
-                memset(word, 0, sizeof(char)*MAX_SIZE);
                 wdPtr = word;
 
-                processWord(wdPtr, args.n);
+                debug("wdPtr points at: %s\n", wdPtr);
+
+                //Don't process the word for now
+                //processWord(wdPtr, args.n);
 
                 strcat(wdPtr, " ");
                 fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);
+
+                memset(word, 0, sizeof(char)*MAX_SIZE);
 
             }
             else
@@ -198,14 +201,19 @@ int main(int argc, char *argv[]){
             break;
     }
 
-    strcpy(line, "\n--------DICTIONARY WORDS--------\n");
-    fwrite(line, strlen(line)+1, 1, oFile);
-    printWords(dict->word_list , oFile);
+    fprintf(oFile, "\n--------DICTIONARY WORDS--------\n");
+    //fwrite(line, strlen(line)+1, 1, oFile);
 
-    printf("\n--------FREED WORDS--------\n");
-    freeWords(dict->word_list);
+    debug("Current dictionary head: %s\n", dict.word_list->word);
+
+    testPrintDictionaryWords();
+
+    printWords(dict.word_list , oFile);
+
+    //printf("\n--------FREED WORDS--------\n");
+    freeWords(dict.word_list);
     //free dictionary
-    free(dict);
+    //free(dict);
     //free m_list
     free(m_list);
 

@@ -65,8 +65,8 @@ typedef struct dictionary{
 
 }Dictionary;
 
-Dictionary *dict;
-Misspelled_word* m_list;
+extern Dictionary dict;
+extern Misspelled_word* m_list;
 
 /**
  * @brief      read in dictionary
@@ -132,5 +132,10 @@ bool foundMisspelledMatch(char* inputWord);
  * @return     boolean
  */
 bool foundDictMatch(char* inputWord);
+
+int stringtoint(char *str);
+
+void testPrintDictionaryWords();
+void testPrintMisspelledWords();
 
 #endif

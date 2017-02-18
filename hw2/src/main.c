@@ -1,14 +1,6 @@
 #include "hw2.h"
 
-int main(int argc, char *argv[]){    
-
-    /*if((m_list = (struct misspelled_word*) malloc(sizeof(struct misspelled_word*))) == NULL)
-    {
-        printf("ERROR: OUT OF MEMORY.\n");
-        return EXIT_FAILURE;
-    }*/
-
-
+int main(int argc, char *argv[]){
 
     Args args;
     // Set struct default values
@@ -24,34 +16,35 @@ int main(int argc, char *argv[]){
     FILE* iFile = DEFAULT_INPUT;
     FILE* oFile = DEFAULT_OUTPUT;
 
-    char c = 0;
+    //bool newDictFlag = false;
 
+    char c = 0;
     while((c = getopt(argc, argv, "ho:i:d:A:")) != -1){
 
         switch(c){
 
             case 'h':
-            
+
                 USAGE(EXIT_SUCCESS);
-            
+
             break;
 
             case 'i':
-                
+
                 strcpy(args.input, optarg);
                 iFile = fopen(args.input, "r");
 
             break;
 
             case 'o':
-                
+
                 strcpy(args.output, optarg);
                 oFile = fopen(args.output, "w");
 
             break;
 
             case 'd':
-                
+
                 strcpy(args.dictFile, optarg);
                 dFile = fopen(args.dictFile, "r");
 
@@ -66,9 +59,9 @@ int main(int argc, char *argv[]){
             break;
 
             case '?':
-            
+
                 USAGE(EXIT_FAILURE);
-            
+
             break;
 
         }
@@ -159,25 +152,28 @@ int main(int argc, char *argv[]){
 
             if(*character == ' ' || *character == '\n')
             {
-                
+
                 debug("%s", "Entered if\n");
 
                 char* punct = wdPtr-1;
                 printf("char:%c", *punct);
-                
+
                 while(!((*punct>='a' && *punct<='z') || (*punct>='A' && *punct<='Z')))
                 {
                     punct--;
                 }
-                
+
                 punct++;
                 printf(" %d\n", (int)(strlen(wdPtr)-strlen(punct)));
-                
+
+                *punct = 0;
                 wdPtr = word;
 
                 debug("wdPtr points at: %s\n", wdPtr);
 
                 //Don't process the word for now
+
+                debug("%s", "Entering processWord\n");
                 processWord(wdPtr, args.n);
 
                 strcat(wdPtr, " ");
@@ -202,9 +198,6 @@ int main(int argc, char *argv[]){
     }
 
     fprintf(oFile, "\n--------DICTIONARY WORDS--------\n");
-    //fwrite(line, strlen(line)+1, 1, oFile);
-
-    debug("Current dictionary head: %s\n", dict.word_list->word);
 
     testPrintDictionaryWords();
 
@@ -215,7 +208,7 @@ int main(int argc, char *argv[]){
     //free dictionary
     //free(dict);
     //free m_list
-    free(m_list);
+    freeMisspellings(m_list);
 
     fclose(dFile);
     fclose(iFile);

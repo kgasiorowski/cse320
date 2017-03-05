@@ -1,5 +1,5 @@
 #include "hw2.h"
-#include "misspelling.h"
+#include "mispelling.h"
 
 /* Great filename. */
 
@@ -8,18 +8,18 @@ Misspelled_word *m_list;
 
 //WORKS
 void processDictionary(FILE* f){
-    
+
     debug("%s\n", "Entered processDictionary");
-    
+
     dict.num_words = 0;
-    
+
     debug("%s\n", "Initialized number of words in dictionary to 0");
 
     while(!feof(f))
     {
         //initialize the current word.
         Dict_word* currWord;
-        
+
         if((currWord = (Dict_word*) malloc(sizeof(Dict_word))) == NULL)
         {
             printf("OUT OF MEMORY.\n");
@@ -61,7 +61,7 @@ void processDictionary(FILE* f){
 
             if(counter >= MAX_MISSPELLED_WORDS+1)
                 break;
-            
+
             //if the character is a space, add the word in word_list and make word NULL.
             if(*character == ' ')
             {
@@ -71,7 +71,7 @@ void processDictionary(FILE* f){
 
                 //Reset word buffer
                 wdPtr = word;
-                
+
                 //Word was found, increment word counter
                 counter++;
 
@@ -91,9 +91,9 @@ void processDictionary(FILE* f){
                 }
                 else
                 {
-                    
+
                     Misspelled_word* currMisspelling;
-                    
+
                     debug("%s", "Not first word. Adding misspelling...\n");
 
                     if((currMisspelling = malloc(sizeof(Misspelled_word))) == NULL)
@@ -101,7 +101,7 @@ void processDictionary(FILE* f){
 
                         printf("ERROR: OUT OF MEMORY.");
                         return;
-                    
+
                     }
 
                     addMisspelledWord(currMisspelling, currWord, wdPtr);
@@ -116,7 +116,7 @@ void processDictionary(FILE* f){
             //if the character isn't a space or a new line, add the character to word.
             else if(*character != '\n')
                 *(wdPtr++) = *character;
-            
+
             character++;
         }
     }
@@ -124,13 +124,13 @@ void processDictionary(FILE* f){
 
 //WORKS
 void addWord(Dict_word* dWord, char* word){
-    
+
     //setting up dWord fields
     dWord->misspelled_count = 0;
     dWord->num_misspellings = 0;
-    
+
     //dWord->next = dict.word_list;
-    
+
     Dict_word *temp = dict.word_list;
 
     if(temp == NULL)
@@ -151,7 +151,7 @@ void addWord(Dict_word* dWord, char* word){
 
 //WORKS
 void addMisspelledWord(Misspelled_word* misspelledWord, Dict_word* correctWord, char* word){
-    
+
     //setting up misspelledWord fields
     strcpy(misspelledWord->word, word);
 
@@ -181,12 +181,25 @@ void freeWords(Dict_word* currWord){
     if(currWord != NULL)
     {
 
-        debug("Test%d\n", 0);
         freeWords(currWord->next);
 
         //free word
         debug("FREED %s\n", currWord->word);
         free(currWord);
+
+    }
+}
+
+//WORKS
+void freeMisspellings(Misspelled_word *m){
+    if(m != NULL)
+    {
+
+        freeMisspellings(m->next);
+
+        debug("FREED %s\n", m->word);
+        free(m);
+
     }
 }
 
@@ -205,17 +218,17 @@ void printWords(Dict_word* currWord, FILE* f){
 
         for(i = 0; i<currWord->num_misspellings; i++)
         {
-            
+
             fprintf(f, "\tMISSPELLED WORD #%d: %s\n", i,((currWord->misspelled)[i])->word);
             fprintf(f,"\t\tMISPELLED?: %d\n", ((currWord->misspelled)[i])->misspelled);
             fprintf(f, "\t\tACTUAL WORD: %s\n", ((currWord->misspelled)[i])->correct_word->word);
 
             if(((currWord->misspelled)[i])->next != NULL && ((currWord->misspelled)[i])->next->word != NULL)
             {
-                
+
 
                 fprintf(f, "\t\tNEXT MISPELLED WORD: %s\n", ((currWord->misspelled)[i])->next->word);
-                
+
             }
 
 
@@ -227,7 +240,7 @@ void printWords(Dict_word* currWord, FILE* f){
 
             fprintf(f, "\tNEXT WORD: %s\n", (currWord->next)->word);
         }
-    
+
         currWord = currWord->next;
 
     }
@@ -236,10 +249,16 @@ void printWords(Dict_word* currWord, FILE* f){
 
 //TODO!!!!!!!!!!!!!
 void processWord(char* inputWord, int n){
-    if(foundMisspelledMatch(inputWord))
+
+    if(foundMisspelledMatch(inputWord)){
+        debug("Found misspelled match for %s\n", inputWord);
         return;
-    if(foundDictMatch(inputWord))
+    }
+
+    if(foundDictMatch(inputWord)){
+        debug("Found dictionary match for %s\n", inputWord);
         return;
+    }
     else
     {
 
@@ -254,14 +273,17 @@ void processWord(char* inputWord, int n){
 
         addWord(newWord, inputWord);
 
-        int numMisspellings=n;
+        // TODO - create new misspelled word object for each new misspelling
+        // Pass it and the other stuff into addMisspelledWord
 
-        while(numMisspellings > 0)
-        {
+        // Generate a misspelling via randomness
+        // printf("Enter misspelling: ");
 
-            char word[WORDLENGTH];
-            char* wdPtr = word;
-            struct misspelled_word* newMWord;
+        struct misspelled_word* newMWord;
+        char **misspellingsArray= gentypos(n, inputWord);
+
+        int i = 0;
+        for(;i<n;i++){
 
             if((newMWord = (struct misspelled_word*) malloc(sizeof(struct misspelled_word))) == NULL)
             {
@@ -269,24 +291,12 @@ void processWord(char* inputWord, int n){
                 return;
             }
 
-            // TODO remove user interactivity
-            // TODO ADD CALL FROM MISSPELLING.H
+            addMisspelledWord(newMWord, newWord, misspellingsArray[i]);
 
-            char **misspellingsArray= gentypos(n, inputWord);
-
-            //TODO - create new misspelled word object for each new misspelling
-            //Pass it and the other stuff into addMisspelledWord
-
-            // Generate a misspelling via randomness
-            //printf("Enter misspelling: ");
-
-            addMisspelledWord(newMWord, newWord, wdPtr);
-
-            debug("%s", "Misspelling added\n");
-
-            numMisspellings--;
+            debug("Misspelling added: %s\n", misspellingsArray[i]);
 
         }
+
     }
 }
 

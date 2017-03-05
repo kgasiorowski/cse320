@@ -52,7 +52,7 @@ typedef struct misspelled_word{
 
     char word[WORDLENGTH];
     int misspelled; // initialize to 0
-    
+
     struct dict_word* correct_word;
     struct misspelled_word* next;
 
@@ -137,5 +137,7 @@ int stringtoint(char *str);
 
 void testPrintDictionaryWords();
 void testPrintMisspelledWords();
+
+void freeMisspellings(Misspelled_word *m);
 
 #endif

@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     payload_check(value1);
     // Print out the allocator block
     sf_varprint(value1);
-    press_to_cont();
+    //press_to_cont();
 
     // Now assign a value
     printf("=== Test2: Assignment test ===\n");
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
     *value1 = VALUE1_VALUE;
     // Now check its value
     check_prim_contents(value1, VALUE1_VALUE, "%d", "value1");
-    press_to_cont();
+    //press_to_cont();
 
     printf("=== Test3: Allocate a second variable ===\n");
     info("Attempting to assign value2 = %ld\n", VALUE2_VALUE);
@@ -86,29 +86,29 @@ int main(int argc, char *argv[]) {
     *value2 = VALUE2_VALUE;
     // Check value
     check_prim_contents(value2, VALUE2_VALUE, "%ld", "value2");
-    press_to_cont();
+    //press_to_cont();
 
     printf("=== Test4: does value1 still equal %d ===\n", VALUE1_VALUE);
     check_prim_contents(value1, VALUE1_VALUE, "%d", "value1");
-    press_to_cont();
+    //press_to_cont();
 
     // Snapshot the freelist
     printf("=== Test5: Perform a snapshot ===\n");
     sf_snapshot(true);
-    press_to_cont();
+    //press_to_cont();
 
     // Free a variable
     printf("=== Test6: Free a block and snapshot ===\n");
     info("%s\n", "Freeing value1...");
     sf_free(value1);
     sf_snapshot(true);
-    press_to_cont();
+   // press_to_cont();
 
     // Allocate more memory
     printf("=== Test7: 8192 byte allocation ===\n");
     void *memory = sf_malloc(8192);
     sf_free(memory);
-    press_to_cont();
+    //press_to_cont();
 
     sf_mem_fini();
 

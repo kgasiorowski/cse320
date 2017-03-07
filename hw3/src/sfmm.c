@@ -27,20 +27,71 @@ void *sf_malloc(size_t size) {
 	}else if(size == 0)
 		return NULL;
 
-	int finalBlockSize = roundup((double)size/16)*16;
+	int requestedSize = (int)size;
+	int finalPayloadSize = roundup((double)size/16)*16;
+	int finalBlockSize = finalPayloadSize+SF_HEADER_SIZE+SF_FOOTER_SIZE;
+	int shiftedFinalBlockSize = finalBlockSize>>4;
 
-	info("Size requested: %d\n", (int)size);
-	info("Block size calculated: %d\n", finalBlockSize);
+	debug("Size requested: %d\n", requestedSize);
+	debug("Payload size calculated: %d\n", finalPayloadSize);
+	debug("Block size calculated: %d\n", finalBlockSize);
+
+	sf_free_header* cursor = freelist_head;
+	dummy(cursor);
 
 	if(freelist_head == NULL){
-		//Empty list. Nothing has been allocated yet
+		//Empty list. All blocks are currently allocated.
+		//Ask for more heap space and return that address+1.
+		debug("%s", "No free blocks detected.\n");
+		debug("Final block size: %d\n", finalBlockSize);
 
+		void *baseBlockLocation = sf_sbrk(finalBlockSize);
 
+		sf_header* header =  baseBlockLocation;
+		debug("Header address: %p\n", (void*)header);
+		header->alloc = 1;
+
+		debug("Setting header requested_size = %d\n", requestedSize);
+		header->requested_size = requestedSize;
+
+		debug("Setting header padding_size == %d - %d = %d\n", finalPayloadSize, requestedSize, finalPayloadSize-requestedSize);
+		header->padding_size = finalPayloadSize - requestedSize;
+
+		header->block_size = shiftedFinalBlockSize;
+		debug("Setting header block size = %d\n", header->block_size);
+
+		//Set footer
+
+		sf_footer* footer = (void*)((char*)baseBlockLocation+finalBlockSize-SF_FOOTER_SIZE);
+		debug("Footer address: %p\n", (void*)footer);
+
+		debug("Difference: %lu\n", (char*)footer-(char*)header);
+
+		footer->alloc = 1;
+		footer->block_size = shiftedFinalBlockSize;
+
+		//Split this block after the footer
+
+		//This now holds the address directly after the footer of the above block
+		sf_free_header* newFreeBlock = (void*)((char*)baseBlockLocation+finalBlockSize);
+
+		newFreeBlock->next = NULL;
+		newFreeBlock->prev = NULL;
+
+		newFreeBlock->header.alloc = 0;
+
+			//Add the head right after
+			//Set the footer
+			//Add it to the free block linked list
+
+		//Return this block after the header
+		return (sf_header*)baseBlockLocation+1;
 
 
 	}else{
 
-		//Freelist already exists
+		//Freelist exists. Find the best fit block by iterating through the list.
+
 
 
 	}
@@ -80,6 +131,12 @@ int roundup(double input){
 		return intvalue+1;
 
 	}
+
+}
+
+void insert_into_freelist(){
+
+
 
 }
 

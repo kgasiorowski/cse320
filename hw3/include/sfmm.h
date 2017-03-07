@@ -13,17 +13,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define PADDING_SIZE_BITS 4
-#define SPLINTER_SIZE_BITS 5
-#define UNUSED_SIZE_BITS 9
-#define REQUEST_SIZE_BITS 14
-#define BLOCK_SIZE_BITS 28
-#define SPLINTER_CONSUMED_BITS 2
 #define ALLOC_SIZE_BITS 2
-
-
-
-
+#define SPLINTER_CONSUMED_BITS 2
+#define BLOCK_SIZE_BITS 28
+#define REQUEST_SIZE_BITS 14
+#define UNUSED_SIZE_BITS 9
+#define SPLINTER_SIZE_BITS 5
+#define PADDING_SIZE_BITS 4
 
 
 #define SF_HEADER_SIZE \

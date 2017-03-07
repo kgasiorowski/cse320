@@ -140,4 +140,13 @@ void insert_into_freelist(){
 
 }
 
+void *allocate_from_free_block(void* freeblock){
+
+	sf_free_header *header = freeblock;
+
+	long freeblock_size = header->header.block_size;
+
+
+}
+
 void dummy(void* dummy){}

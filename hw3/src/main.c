@@ -66,6 +66,7 @@ int main(int argc, char *argv[]) {
     payload_check(value1);
     // Print out the allocator block
     sf_varprint(value1);
+
     //press_to_cont();
 
     // Now assign a value

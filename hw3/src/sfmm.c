@@ -19,8 +19,6 @@ sf_free_header* freelist_head = NULL;
 
 void *sf_malloc(size_t size) {
 
-	const size_t PAGE_SIZE = 4096;
-
 	if(size > 4*PAGE_SIZE){
 		errno = EINVAL;
 		return NULL;
@@ -34,6 +32,13 @@ void *sf_malloc(size_t size) {
 	if(freelist_head == NULL){
 
 		void *baseBlockLocation = sf_sbrk(totalBlockSize);
+
+		//Return error if
+		if(baseBlockLocation == NULL){
+			errno = ENOMEM;
+			return NULL;
+		}
+
 		size_t new_block_size = ((char*)sf_sbrk(0) - (char*)baseBlockLocation);
 		debug("Calculated block size asked from heap: %d\n", (int)new_block_size);
 		sf_free_header* free_page = baseBlockLocation;
@@ -81,6 +86,43 @@ int roundup(double input){
 		return intvalue;
 	else
 		return intvalue+1;
+
+}
+
+//TODO LOOK ME OVER
+sf_free_header* find_match(size_t requested_size){
+
+	sf_free_header* cursor = freelist_head;
+	sf_free_header* closest_match = NULL;
+	int smallest_difference = (unsigned int)-1;
+
+	int difference = 0;
+	size_t current_block_size = -1;
+	size_t requested_block_size = (roundup(requested_size/16.0)*16)+SF_FOOTER_SIZE+SF_HEADER_SIZE;
+
+
+	while(cursor != NULL){
+
+		current_block_size = cursor->header.block_size<<4;
+		difference = current_block_size-requested_block_size;
+
+		//Move on if the block is too small
+		if(difference < 0)
+			continue;
+
+		if(difference == 0){
+			//Perfect match found
+			//Immediately return it
+			return cursor;
+		}
+
+		if(difference < smallest_difference)
+			closest_match = cursor;
+
+		cursor = cursor->next;
+	}
+
+	return closest_match;
 
 }
 

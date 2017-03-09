@@ -11,5 +11,6 @@ void insert_into_freelist(sf_free_header*);
 sf_free_header* find_match(size_t);
 sf_free_header *coalesce(sf_free_header*);
 int freelist_length();
+sf_footer *get_footer(sf_header*);
 
 #endif

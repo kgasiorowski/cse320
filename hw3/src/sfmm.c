@@ -20,7 +20,7 @@ sf_free_header* freelist_head = NULL;
 //TODO - IMPLEMENT ME
 void *sf_malloc(size_t size) {
 
-	if(size > 4*PAGE_SIZE){
+	if(size > (4*PAGE_SIZE)+SF_FOOTER_SIZE+SF_HEADER_SIZE){
 		errno = EINVAL;
 		return NULL;
 	}else if(size == 0)
@@ -33,6 +33,7 @@ void *sf_malloc(size_t size) {
 	//Freelist is empty, which means theres no free space. We must ask for more.
 	if(block_to_alloc == NULL){
 
+		//Request more space
 		void *baseBlockLocation = sf_sbrk(totalBlockSize);
 
 		//Return error if
@@ -41,18 +42,22 @@ void *sf_malloc(size_t size) {
 			return NULL;
 		}
 
+		//Calculate the new block size
 		size_t new_block_size = ((char*)sf_sbrk(0) - (char*)baseBlockLocation);
 		debug("Calculated block size asked from heap: %d\n", (int)new_block_size);
-		sf_free_header* free_page = baseBlockLocation;
 
+		//Initialize the header data
+		sf_free_header* free_page = baseBlockLocation;
 		free_page->header.alloc=0;
 		free_page->header.block_size = new_block_size>>4;
 
+		//Initialize footer data
 		sf_footer *new_page_footer = (void*)((char*)baseBlockLocation+new_block_size-SF_FOOTER_SIZE);
 		new_page_footer->alloc = 0;
 		new_page_footer->splinter = 0;
 		new_page_footer->block_size = new_block_size>>4;
 
+		//The new page(s) are free for use now. Insert it into the freelist.
 		insert_into_freelist(free_page);
 		debug("Freelist length: %d\n", freelist_length());
 		block_to_alloc = find_match(size);
@@ -68,6 +73,23 @@ void *sf_realloc(void *ptr, size_t size) {
 }
 
 void sf_free(void* ptr) {
+
+	sf_free_header *block_to_free = ptr;
+
+	//Initialize all the fields to zero
+	block_to_free->header.alloc = 0;
+	block_to_free->header.padding_size = 0;
+	block_to_free->header.splinter = 0;
+	block_to_free->header.splinter_size = 0;
+	block_to_free->header.requested_size = 0;
+
+	//Update the footer fields
+	sf_footer *free_footer = get_footer(block_to_free);
+	free_footer->alloc = 0;
+	free_footer->splinter = 0;
+
+	insert_into_freelist(block_to_free);
+
 	return;
 }
 
@@ -296,7 +318,7 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 	alloc_header->padding_size = padding_size;
 
 	//Initialize the footer
-	sf_footer *alloc_footer = (void*)((char*)alloc_header+block_size-SF_FOOTER_SIZE);
+	sf_footer *alloc_footer = get_footer(alloc_header);
 	debug("Alloc footer address: %p\n", (void*)alloc_footer);
 	alloc_footer->alloc = 1;
 	alloc_footer->splinter = 0;
@@ -322,7 +344,22 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 	insert_into_freelist(newFreeBlock);
 	debug("Freelist length: %d\n", freelist_length());
 
+	debug("Returning address: (%p)\n", (void*)(alloc_header+1));
 	return (void*)(alloc_header+1);
+
+}
+
+//Returns the footer for a given header
+sf_footer *get_footer(sf_header *header){
+
+	return (sf_footer*)((char*)header+(header->block_size<<4)-SF_FOOTER_SIZE);
+
+}
+
+//Returns the header for a given footer
+sf_header *get_header(sf_footer *footer){
+
+	return (sf_header*)((char*)footer-(footer->block_size<<4)+SF_HEADER_SIZE);
 
 }
 

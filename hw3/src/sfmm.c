@@ -52,7 +52,6 @@ void *sf_malloc(size_t size) {
 		sf_free_header* free_page = baseBlockLocation;
 		debug("Header address: (%p) [%lu]\n", SHORT_ADDR((void*)free_page), (unsigned long)free_page);
 		free_page->header.alloc=0;
-		debug("Set block size to: %lu\n", new_block_size>>4);
 		free_page->header.block_size = new_block_size>>4;
 		free_page->next = NULL;
 		free_page->prev = NULL;
@@ -65,7 +64,7 @@ void *sf_malloc(size_t size) {
 		new_page_footer->splinter = 0;
 		new_page_footer->block_size = new_block_size>>4;
 
-		sf_varprint(free_page);
+		sf_blockprint(free_page);
 
 		//The new page(s) are free for use now. Insert it into the freelist.
 		insert_into_freelist(free_page);
@@ -365,7 +364,6 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 	debug("Requested size: %d\n", (int)requested_size);
 
 	sf_free_header *free_header = freeblock;
-	//sf_footer *original_free_footer = (void*)((char*)freeblock + free_header->header.block_size - SF_FOOTER_SIZE);
 	sf_footer *original_free_footer = get_footer((sf_header*)free_header);
 	debug("Free block footer address: (%p) [%lu]\n", SHORT_ADDR((void*)original_free_footer), (unsigned long)original_free_footer);
 	CHECK_DIV_16(original_free_footer, "free footer");
@@ -461,7 +459,7 @@ void freelist_info(){
 	while(cursor != NULL){
 
 		warn("Block #%d\n", i);
-		sf_varprint(cursor);
+		sf_blockprint(cursor);
 		i++;
 
 		cursor = cursor->next;

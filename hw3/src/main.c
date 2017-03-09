@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sfmm.h"
+#include "sfmm_utils.h"
 #include "debug.h"
 
 // Define 20 megabytes as the max heap size
@@ -56,6 +57,7 @@ int main(int argc, char *argv[]) {
 
     // Tell the user about the fields
     info("Initialized heap with %dmb of heap space.\n", MAX_HEAP_SIZE >> 20);
+    info("Header size: %d\nFooter size: %d\n", SF_HEADER_SIZE, SF_FOOTER_SIZE);
     press_to_cont();
 
     // Print out title for first test
@@ -63,6 +65,7 @@ int main(int argc, char *argv[]) {
     // Test #1: Allocate an integer
     int *value1 = sf_malloc(sizeof(int));
     null_check(value1, sizeof(int));
+
     payload_check(value1);
     // Print out the allocator block
     sf_varprint(value1);
@@ -83,6 +86,7 @@ int main(int argc, char *argv[]) {
     long *value2 = sf_malloc(sizeof(long));
     null_check(value2, sizeof(long));
     payload_check(value2);
+    sf_varprint(value2);
     // Assign a value
     *value2 = VALUE2_VALUE;
     // Check value

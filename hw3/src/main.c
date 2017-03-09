@@ -57,7 +57,6 @@ int main(int argc, char *argv[]) {
 
     // Tell the user about the fields
     info("Initialized heap with %dmb of heap space.\n", MAX_HEAP_SIZE >> 20);
-    info("Header size: %d\nFooter size: %d\n", SF_HEADER_SIZE, SF_FOOTER_SIZE);
     press_to_cont();
 
     // Print out title for first test
@@ -105,6 +104,7 @@ int main(int argc, char *argv[]) {
     // Free a variable
     printf("=== Test6: Free a block and snapshot ===\n");
     info("%s\n", "Freeing value1...");
+    freelist_info();
     sf_free(value1);
     sf_snapshot(true);
     press_to_cont();

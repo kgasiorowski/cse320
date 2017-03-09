@@ -20,7 +20,7 @@ sf_free_header* freelist_head = NULL;
 //TODO - IMPLEMENT ME
 void *sf_malloc(size_t size) {
 
-	if(size > (4*PAGE_SIZE)+SF_FOOTER_SIZE+SF_HEADER_SIZE){
+	if(size > 4*(PAGE_SIZE+SF_FOOTER_SIZE+SF_HEADER_SIZE)){
 		errno = EINVAL;
 		return NULL;
 	}else if(size == 0)
@@ -36,6 +36,8 @@ void *sf_malloc(size_t size) {
 		//Request more space
 		void *baseBlockLocation = sf_sbrk(totalBlockSize);
 
+		debug("Base heap request location (%p) [%lu]\n", SHORT_ADDR(baseBlockLocation), (unsigned long)baseBlockLocation);
+
 		//Return error if
 		if(baseBlockLocation == NULL){
 			errno = ENOMEM;
@@ -43,19 +45,27 @@ void *sf_malloc(size_t size) {
 		}
 
 		//Calculate the new block size
-		size_t new_block_size = ((char*)sf_sbrk(0) - (char*)baseBlockLocation);
+		size_t new_block_size = roundup(size/PAGE_SIZE)*PAGE_SIZE;
 		debug("Calculated block size asked from heap: %lu\n", new_block_size);
 
 		//Initialize the header data
 		sf_free_header* free_page = baseBlockLocation;
+		debug("Header address: (%p) [%lu]\n", SHORT_ADDR((void*)free_page), (unsigned long)free_page);
 		free_page->header.alloc=0;
+		debug("Set block size to: %lu\n", new_block_size>>4);
 		free_page->header.block_size = new_block_size>>4;
+		free_page->next = NULL;
+		free_page->prev = NULL;
 
 		//Initialize footer data
-		sf_footer *new_page_footer = (void*)((char*)baseBlockLocation+new_block_size-SF_FOOTER_SIZE);
+
+		sf_footer *new_page_footer = (sf_footer*)((unsigned long)baseBlockLocation+new_block_size-SF_FOOTER_SIZE);
+		debug("Footer address: (%p) [%lu]\n", SHORT_ADDR((void*)new_page_footer), (unsigned long)new_page_footer);
 		new_page_footer->alloc = 0;
 		new_page_footer->splinter = 0;
 		new_page_footer->block_size = new_block_size>>4;
+
+		sf_varprint(free_page);
 
 		//The new page(s) are free for use now. Insert it into the freelist.
 		insert_into_freelist(free_page);
@@ -74,7 +84,10 @@ void *sf_realloc(void *ptr, size_t size) {
 
 void sf_free(void* ptr) {
 
-	sf_free_header *block_to_free = ptr;
+	debug("Attempting to free block (%p) [%lu]\n", SHORT_ADDR(ptr), (unsigned long)ptr);
+
+	sf_free_header *block_to_free = (sf_free_header*)((unsigned long)ptr-SF_FOOTER_SIZE);
+	sf_footer *free_footer = get_footer((sf_header*)block_to_free);
 
 	//Initialize all the fields to zero
 	block_to_free->header.alloc = 0;
@@ -83,15 +96,16 @@ void sf_free(void* ptr) {
 	block_to_free->header.splinter_size = 0;
 	block_to_free->header.requested_size = 0;
 
-	//Update the footer fields
-	sf_footer *free_footer = get_footer((sf_header*)block_to_free);
+	//Initialize footer fields
 	free_footer->alloc = 0;
 	free_footer->splinter = 0;
 
 	insert_into_freelist(block_to_free);
+	debug("Freelist length: %d\n", freelist_length());
 	coalesce(block_to_free);
 
 	return;
+
 }
 
 int sf_info(info* ptr) {
@@ -103,6 +117,37 @@ int sf_info(info* ptr) {
 // Utils
 //
 ////////////////////////////////////////////////////////
+//Returns the footer for a given header
+sf_footer *get_footer(sf_header *header){
+
+	return (sf_footer*)((unsigned long)header+(header->block_size<<4)-SF_FOOTER_SIZE);
+
+}
+
+//Returns the header for a given footer
+sf_header *get_header(sf_footer *footer){
+
+	return (sf_header*)((unsigned long)footer-(footer->block_size<<4)+SF_HEADER_SIZE);
+
+}
+
+sf_free_header *find_in_freelist(void* ptr){
+
+	sf_free_header *cursor = freelist_head;
+
+	while(cursor != NULL){
+
+		if((unsigned long)cursor == (unsigned long)ptr-SF_HEADER_SIZE)
+			break;
+
+		cursor = cursor -> next;
+
+	}
+
+	return cursor;
+
+}
+
 int roundup(double input){
 
 	int intvalue = (int)input;
@@ -141,8 +186,10 @@ sf_free_header* find_match(size_t requested_size){
 		debug("Difference calculated: %d\n", (int)difference);
 
 		//Move on if the block is too small
-		if(difference < 0)
+		if(difference < 0){
+			cursor = cursor->next;
 			continue;
+		}
 
 		//If a perfect match was found,
 		//Immediately return it
@@ -228,13 +275,12 @@ void remove_from_freelist(sf_free_header* block_to_remove){
 void insert_into_freelist(sf_free_header* block_to_insert){
 
 	debug("Entered insertion function with (%p) [%lu] with block size (%d)\n", SHORT_ADDR((void*)block_to_insert), (unsigned long)block_to_insert, block_to_insert->header.block_size<<4);
-
 	sf_free_header *cursor = freelist_head;
 
 	//Insert in front
 	if(freelist_head == NULL){
 
-		debug("Inserted free block (%p) [%lu] at the beginning of the list\n", SHORT_ADDR((void*)block_to_insert), (unsigned long)block_to_insert);
+		debug("Started new freelist with block: (%p) [%lu]\n", SHORT_ADDR((void*)block_to_insert), (unsigned long)block_to_insert);
 		freelist_head = block_to_insert;
 		return;
 
@@ -244,26 +290,36 @@ void insert_into_freelist(sf_free_header* block_to_insert){
 
 		if(cursor->next != NULL)
 			cursor = cursor->next;
-		else{
-			//Insert at the end
-			debug("Inserted block (%p) [%lu] at the end\n", SHORT_ADDR((void*)block_to_insert), (unsigned long)block_to_insert);
-			cursor->next = block_to_insert;
-			block_to_insert->prev = cursor;
-			block_to_insert->next = NULL;
-			return;
-
-		}
+		else
+			break;
 
 	}
 
-	debug("Inserted block (%p) [%lu] in the middle of the list\n", SHORT_ADDR((void*)block_to_insert), (unsigned long)block_to_insert);
+	if(cursor->next == NULL){
+		//Insert at the end
+		debug("Inserted block (%p) [%lu] at the end\n", SHORT_ADDR((void*)block_to_insert), (unsigned long)block_to_insert);
+		cursor->next = block_to_insert;
+		block_to_insert->prev = cursor;
+		block_to_insert->next = NULL;
 
-	//Insert in the middle
-	cursor->prev->next = block_to_insert;
-	block_to_insert->prev = cursor;
+	}
+	else if(cursor == freelist_head){
 
-	cursor->prev = block_to_insert;
-	block_to_insert->next = cursor;
+		debug("Inserted block (%p) [%lu] at the beginning\n", SHORT_ADDR((void*)block_to_insert), (unsigned long)block_to_insert);
+		freelist_head = block_to_insert;
+		cursor->prev = block_to_insert;
+		block_to_insert->next = cursor;
+		block_to_insert->prev = NULL;
+
+	}else{
+
+		debug("Inserted block (%p) [%lu] in the middle\n", SHORT_ADDR((void*)block_to_insert), (unsigned long)block_to_insert);
+		cursor->prev->next = block_to_insert;
+		block_to_insert->prev = cursor->prev;
+		cursor->prev = block_to_insert;
+		block_to_insert->next = cursor;
+
+	}
 
 	return;
 
@@ -275,7 +331,7 @@ sf_free_header *coalesce(sf_free_header* block_to_coalesce){
 
 	debug("Entered coalesce with (%p) [%lu]\n", SHORT_ADDR(block_to_coalesce), (unsigned long)block_to_coalesce);
 
-	sf_footer *footer_to_coalesce = (void*)((char*)block_to_coalesce-SF_FOOTER_SIZE);
+	sf_footer *footer_to_coalesce = get_footer((sf_header*)block_to_coalesce);
 	debug("Previous block alloc: %d\n", footer_to_coalesce->alloc);
 	debug("Previous block size: %d\n", footer_to_coalesce->block_size<<4);
 
@@ -307,9 +363,13 @@ sf_free_header *coalesce(sf_free_header* block_to_coalesce){
 void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size){
 
 	debug("Requested size: %d\n", (int)requested_size);
+
 	sf_free_header *free_header = freeblock;
-	sf_footer *original_free_footer = (void*)((char*)freeblock + free_header->header.block_size - SF_FOOTER_SIZE);
+	//sf_footer *original_free_footer = (void*)((char*)freeblock + free_header->header.block_size - SF_FOOTER_SIZE);
+	sf_footer *original_free_footer = get_footer((sf_header*)free_header);
 	debug("Free block footer address: (%p) [%lu]\n", SHORT_ADDR((void*)original_free_footer), (unsigned long)original_free_footer);
+	CHECK_DIV_16(original_free_footer, "free footer");
+
 	size_t original_free_block_size = free_header->header.block_size<<4;
 	sf_header *alloc_header = (void*)freeblock;
 
@@ -330,6 +390,7 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 	debug("Calculated block size: %lu\n", block_size);
 
 	debug("alloc_header address: (%p) [%lu]\n", SHORT_ADDR((void*)alloc_header), (unsigned long)alloc_header);
+	CHECK_DIV_8(alloc_header, "alloc header");
 	//Initialize the new allocated values in the header
 	alloc_header->alloc = 1;
 	alloc_header->splinter = 0;
@@ -341,16 +402,18 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 	//Initialize the footer
 	sf_footer *alloc_footer = get_footer(alloc_header);
 	debug("alloc_footer address: (%p) [%lu]\n", SHORT_ADDR((void*)alloc_footer), (unsigned long)alloc_footer);
+	CHECK_DIV_16((void*)alloc_footer, "New Alloc Footer");
 	alloc_footer->alloc = 1;
 	alloc_footer->splinter = 0;
 	alloc_footer->block_size = block_size>>4;
 
 	//Create a new free header for the block we are carving up
-	sf_free_header *newFreeBlock = (sf_free_header*)(alloc_footer+1);
+	sf_free_header *newFreeBlock = (sf_free_header*)((unsigned long)alloc_footer+SF_FOOTER_SIZE);
 	//Calculate the new free block size
 	size_t new_free_block_size = (original_free_block_size - block_size)>>4;
 
 	debug("New free header address: (%p) [%lu]\n", SHORT_ADDR((void*)newFreeBlock), (unsigned long)newFreeBlock);
+	CHECK_DIV_8((void*)newFreeBlock, "new free block");
 	newFreeBlock->header.alloc = 0;
 	newFreeBlock->header.splinter = 0;
 	newFreeBlock->header.block_size = new_free_block_size;
@@ -367,21 +430,8 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 
 	debug("Final block address: (%p) [%lu]\n", SHORT_ADDR((void*)alloc_header), (unsigned long)alloc_header);
 	debug("Returning address: (%p) [%lu]\n", SHORT_ADDR((void*)(alloc_header+1)), (unsigned long)(alloc_header+1));
+	debug("sizeof allocated header: %lu\n", sizeof(alloc_header));
 	return (void*)(alloc_header+1);
-
-}
-
-//Returns the footer for a given header
-sf_footer *get_footer(sf_header *header){
-
-	return (sf_footer*)((char*)header+(header->block_size<<4)-SF_FOOTER_SIZE);
-
-}
-
-//Returns the header for a given footer
-sf_header *get_header(sf_footer *footer){
-
-	return (sf_header*)((char*)footer-(footer->block_size<<4)+SF_HEADER_SIZE);
 
 }
 
@@ -400,6 +450,25 @@ int freelist_length(){
 	}
 
 	return i;
+
+}
+
+void freelist_info(){
+
+	sf_free_header* cursor = freelist_head;
+	int i = 1;
+
+	while(cursor != NULL){
+
+		warn("Block #%d\n", i);
+		sf_varprint(cursor);
+		i++;
+
+		cursor = cursor->next;
+
+	}
+
+	warn("%s", "Exited freelist\n");
 
 }
 

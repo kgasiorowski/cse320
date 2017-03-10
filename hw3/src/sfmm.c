@@ -20,8 +20,9 @@ sf_free_header* freelist_head = NULL;
 //TODO - IMPLEMENT ME
 void *sf_malloc(size_t size) {
 
-	if(size > 4*(PAGE_SIZE+SF_FOOTER_SIZE+SF_HEADER_SIZE)){
+	if(size > (4*PAGE_SIZE)+SF_FOOTER_SIZE+SF_HEADER_SIZE){
 		errno = EINVAL;
+		error("Cannot handle the requested %lu bytes...\n", size);
 		return NULL;
 	}else if(size == 0)
 		return NULL;
@@ -30,11 +31,21 @@ void *sf_malloc(size_t size) {
 	size_t totalBlockSize = (roundup(size/LINE_SIZE)*LINE_SIZE)+SF_FOOTER_SIZE+SF_HEADER_SIZE;
 	sf_free_header *block_to_alloc = find_match(size);
 
+	debug("Block to carve up: (%p) [%lu]\n", block_to_alloc, (unsigned long)block_to_alloc);
+
 	//Freelist is empty, which means theres no free space. We must ask for more.
 	if(block_to_alloc == NULL){
 
 		//Request more space
 		void *baseBlockLocation = sf_sbrk(totalBlockSize);
+
+		if(baseBlockLocation == (void*)-1)
+		{
+
+			error("%s","Out of memory!\n");
+			return NULL;
+
+		}
 
 		debug("Base heap request location (%p) [%lu]\n", SHORT_ADDR(baseBlockLocation), (unsigned long)baseBlockLocation);
 
@@ -44,8 +55,10 @@ void *sf_malloc(size_t size) {
 			return NULL;
 		}
 
+		debug("Total block size to heap from: %lu\n", totalBlockSize);
+
 		//Calculate the new block size
-		size_t new_block_size = roundup(size/PAGE_SIZE)*PAGE_SIZE;
+		size_t new_block_size = roundup(totalBlockSize/PAGE_SIZE)*PAGE_SIZE;
 		debug("Calculated block size asked from heap: %lu\n", new_block_size);
 
 		//Initialize the header data
@@ -57,7 +70,6 @@ void *sf_malloc(size_t size) {
 		free_page->prev = NULL;
 
 		//Initialize footer data
-
 		sf_footer *new_page_footer = (sf_footer*)((unsigned long)baseBlockLocation+new_block_size-SF_FOOTER_SIZE);
 		debug("Footer address: (%p) [%lu]\n", SHORT_ADDR((void*)new_page_footer), (unsigned long)new_page_footer);
 		new_page_footer->alloc = 0;
@@ -118,6 +130,7 @@ int sf_info(info* ptr) {
 ////////////////////////////////////////////////////////
 //Returns the footer for a given header
 sf_footer *get_footer(sf_header *header){
+	debug("Entered get_footer with (%p)\n", header);
 
 	return (sf_footer*)((unsigned long)header+(header->block_size<<4)-SF_FOOTER_SIZE);
 
@@ -125,12 +138,17 @@ sf_footer *get_footer(sf_header *header){
 
 //Returns the header for a given footer
 sf_header *get_header(sf_footer *footer){
+	debug("Entered get_header with (%p)\n", footer);
 
 	return (sf_header*)((unsigned long)footer-(footer->block_size<<4)+SF_HEADER_SIZE);
 
 }
 
+//Finds a free block in the freelist by memory address
+//This is definitely not needed.
 sf_free_header *find_in_freelist(void* ptr){
+
+	debug("Entered find_in_freelist (%p)\n", ptr);
 
 	sf_free_header *cursor = freelist_head;
 
@@ -361,6 +379,7 @@ sf_free_header *coalesce(sf_free_header* block_to_coalesce){
 //Reminder: All block sizes must be shifted right twice
 void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size){
 
+	debug("Entered allocate_from_free_block with (%p)and %lu\n", freeblock, requested_size);
 	debug("Requested size: %d\n", (int)requested_size);
 
 	sf_free_header *free_header = freeblock;

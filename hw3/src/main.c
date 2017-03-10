@@ -115,6 +115,15 @@ int main(int argc, char *argv[]) {
     sf_free(memory);
     press_to_cont();
 
+    printf("Test8: Should go over page limit\n");
+    void *moreMemory1 = sf_malloc(40000);
+    void *moreMemory2 = sf_malloc(10000);
+    dummy(moreMemory1);
+    dummy(moreMemory2);
+
+    //sf_free(moreMemory);
+    press_to_cont();
+
     sf_mem_fini();
 
     return EXIT_SUCCESS;

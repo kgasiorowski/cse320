@@ -18,6 +18,9 @@
  */
 sf_free_header* freelist_head = NULL;
 info prgm_info;
+static size_t total_memory_asked;
+static size_t max_sum_asked;
+static size_t current_sum_asked;
 
 void *sf_malloc(size_t size) {
 
@@ -203,6 +206,8 @@ void sf_free(void* ptr) {
 		return;
 	}
 
+	update_peak_util(-(block_to_free->header.requested_size));
+
 	sf_footer *free_footer = get_footer((sf_header*)block_to_free);
 
 	//Initialize all the fields to zero
@@ -232,7 +237,7 @@ void sf_free(void* ptr) {
 int sf_info(info* ptr) {
 
 
-	if(ptr == NULL)
+	if(ptr == NULL || total_memory_asked == 0)
 		return -1;
 
 	ptr->allocatedBlocks = prgm_info.allocatedBlocks;
@@ -240,7 +245,7 @@ int sf_info(info* ptr) {
 	ptr->padding = prgm_info.padding;
 	ptr->splintering = prgm_info.splintering;
 	ptr->coalesces = prgm_info.coalesces;
-	ptr->peakMemoryUtilization = prgm_info.peakMemoryUtilization;
+	ptr->peakMemoryUtilization = max_sum_asked / total_memory_asked;
 
 	return 0;
 }
@@ -266,11 +271,16 @@ sf_header *get_header(sf_footer *footer){
 
 }
 
+void update_peak_util(long new_PL){
+
+	current_sum_asked += new_PL;
+	max_sum_asked = max_sum_asked<current_sum_asked?current_sum_asked:max_sum_asked;
+
+}
+
 //Takes a block size, and asks for that much space from the heap. Returns it as a free block.
 //The new page is automatically added to the linked list and coalesced.
 sf_free_header *get_heap_space(size_t size){
-
-	static unsigned long total_memory_asked;
 
 	size_t totalBlockSize = (roundup(size/LINE_SIZE)*LINE_SIZE)+SF_FOOTER_SIZE+SF_HEADER_SIZE;
 
@@ -608,6 +618,8 @@ sf_free_header *coalesce(sf_free_header* block_to_coalesce){
 //
 //Reminder: All block sizes must be shifted right twice
 void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size){
+
+	update_peak_util(requested_size);
 
 	debug("Entered allocate_from_free_block with (%p) and %lu\n", freeblock, requested_size);
 	debug("Requested size: %d\n", (int)requested_size);

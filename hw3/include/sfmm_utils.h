@@ -37,5 +37,6 @@ int freelist_contains(sf_free_header*);
 sf_free_header *merge_blocks(sf_free_header*, sf_free_header*);
 sf_free_header *get_heap_space(size_t);
 void remove_from_freelist(sf_free_header*);
+void update_peak_util(long);
 
 #endif

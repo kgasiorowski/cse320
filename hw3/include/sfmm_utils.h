@@ -25,13 +25,15 @@ void dummy(void*);
 int roundup(double);
 void *allocate_from_free_block(sf_free_header*, size_t);
 void insert_into_freelist(sf_free_header*);
-sf_free_header* find_match(size_t);
-void coalesce(sf_free_header*);
+sf_free_header *find_match(size_t);
+sf_free_header *coalesce(sf_free_header*);
 int freelist_length();
 sf_footer *get_footer(sf_header*);
 sf_header *get_header(sf_footer*);
 void freelist_info();
 sf_free_header *find_in_freelist(void*);
 int freelist_contains(sf_free_header*);
+sf_free_header *merge_blocks(sf_free_header*, sf_free_header*);
+sf_free_header *get_heap_space(size_t);
 
 #endif

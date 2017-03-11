@@ -59,29 +59,18 @@ int main(int argc, char *argv[]) {
     info("Initialized heap with %dmb of heap space.\n", MAX_HEAP_SIZE >> 20);
     press_to_cont();
 
-    info("%s", "\n\nFirst malloc\n\n");
-    int *mem1 = sf_malloc(sizeof(int));
+    void *mem1 = sf_malloc(sizeof(int));
+    void *mem2 = sf_malloc(sizeof(int));
+
+    info("%s","After mallocs\n");
+    freelist_info();
+
+    info("%s", "First free\n");
     sf_free(mem1);
     freelist_info();
 
-    info("%s", "\n\nSecond malloc\n\n");
-    int *mem2 = sf_malloc(sizeof(int));
+    info("%s", "Second free\n");
     sf_free(mem2);
-    freelist_info();
-
-    info("%s", "\n\nThird malloc\n\n");
-    void *mem3 = sf_malloc(sizeof(long)*2);
-    sf_free(mem3);
-    freelist_info();
-
-    info("%s", "\n\nFourth malloc\n\n");
-    void *mem4 = sf_malloc(256);
-    sf_free(mem4);
-    freelist_info();
-
-    info("%s", "\n\nFifth malloc\n\n");
-    void *mem5 = sf_malloc(400);
-    sf_free(mem5);
     freelist_info();
 
     /*

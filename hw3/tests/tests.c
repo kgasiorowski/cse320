@@ -67,3 +67,39 @@ Test(sf_memsuite, Coalesce_no_coalescing, .init = sf_mem_init, .fini = sf_mem_fi
 //STUDENT UNIT TESTS SHOULD BE WRITTEN BELOW
 //DO NOT DELETE THESE COMMENTS
 //#
+
+Test(sf_memsuite, realloc_test, .init = sf_mem_init, .fini = sf_mem_fini) {
+
+  int* test = sf_malloc(sizeof(int));
+  *test = 320;
+
+  sf_realloc(test, sizeof(int)*20);
+
+  cr_assert(*test == 320);
+
+}
+
+
+Test(sf_memsuite, realloc_smaller_test, .init = sf_mem_init, .fini = sf_mem_fini) {
+
+
+  int *x = sf_malloc(sizeof(long));
+
+  *x = 100;
+
+  sf_realloc(x, sizeof(int));
+
+  cr_assert(*x == 100);
+
+}
+
+
+Test(sf_memsuite, sf_info_nullchecks, .init = sf_mem_init, .fini = sf_mem_fini) {
+
+  info *temp = (info*)malloc(sizeof(info));
+  cr_assert(sf_info(temp) == -1);
+
+  temp = NULL;
+  cr_assert(sf_info(NULL) == -1);
+
+}

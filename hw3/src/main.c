@@ -78,11 +78,10 @@ int main(int argc, char *argv[]) {
     sf_free(mem1);
     freelist_info();
 
-    info *myinfo = NULL;
+    info *myinfo = (info*)malloc(sizeof(info));
 
-    sf_info(myinfo);
+    assert(myinfo != NULL && sf_info(myinfo) != -1);
 
-    assert(myinfo != NULL);
 
     // // Print out title for first test
     // printf("=== Test1: Allocation test ===\n");

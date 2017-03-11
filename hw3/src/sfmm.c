@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <debug.h>
+#include <string.h>
 
 /**
  * You should store the head of your free list in this variable.
@@ -39,9 +40,123 @@ void *sf_malloc(size_t size) {
 
 }
 
-//TODO IMPLEMENT ME
 void *sf_realloc(void *ptr, size_t size) {
-	return NULL;
+
+	debug("ENTERED REALLOC with (%p) %lu\n", SHORT_ADDR(ptr), size);
+	debug("Integer value at this addr: %d\n", *(int*)ptr);
+
+	// 1. edge cases
+	if(size == 0){
+		sf_free(ptr);
+		return NULL;
+	}
+
+	// 2. Try to use an adjacent free block
+	sf_header *current_block = (sf_header*)((unsigned long)ptr-SF_HEADER_SIZE);
+	sf_footer *current_footer = get_footer(current_block);
+
+	sf_header *next_block = (sf_header*)((unsigned long)current_footer+SF_FOOTER_SIZE);
+
+	debug("Current block addr: (%p)\n", SHORT_ADDR(current_block));
+	debug("Next block addr: (%p)\n", SHORT_ADDR(next_block));
+
+	size_t next_block_size = next_block->block_size<<4;
+	size_t current_block_size = current_block->block_size<<4;
+	size_t original_payload = current_block_size - (current_block->padding_size+current_block->splinter_size);
+	size_t total_possible_size = next_block_size + current_block_size - HF_SIZE;
+	size_t requested_resize = roundup(size/LINE_SIZE)*LINE_SIZE;
+	size_t total_requested_resize = requested_resize+HF_SIZE;
+	long net_change = (long)total_requested_resize - (long)current_block_size;
+
+	debug("Next block size: %lu\n", next_block_size);
+	debug("Current block size: %lu\n", current_block_size);
+	debug("Total possible size: %lu\n", total_possible_size);
+	debug("Requested resize: %lu (%lu)\n", size, requested_resize);
+	debug("Net change: %ld\n", net_change);
+
+	if(net_change == 0)
+		return ptr;
+	else if(net_change > 0){
+
+		//Check if the next block is free, and large enough
+		if(total_possible_size >= size && !next_block->alloc){
+
+			debug("%s","Next block is big enough, and is not allocated!\n");
+
+			//Remove the original block and merge the two blocks!
+			//And return the original pointer
+
+			remove_from_freelist((sf_free_header*)next_block);
+
+			current_block->block_size = total_possible_size>>4;
+			current_block->alloc = 0;
+
+			sf_footer *new_footer = get_footer(current_block);
+			new_footer->alloc = 0;
+			new_footer->block_size = total_possible_size>>4;
+
+			void *new_ptr = allocate_from_free_block((sf_free_header*)current_block, size);
+
+			debug("Realloc returning address: (%p)\n", SHORT_ADDR(new_ptr));
+			debug("Integer value at this addr: %d\n", *(int*)new_ptr);
+
+			return new_ptr;
+
+		}
+
+		// 3. Find a new block
+		sf_free_header *new_block = find_match(size);
+
+		// 3a. If none exists, ask for more heap space
+		if(new_block == NULL){
+			new_block = get_heap_space(size);
+			if(new_block == (void*)-1)
+			{
+
+				errno = ENOMEM;
+				return NULL;
+
+			}
+		}
+
+		// 4. Allocate that free block
+		void *new_payload_addr = allocate_from_free_block(new_block, size);
+
+		// 5. memcpy(payload_size)
+		memcpy(new_payload_addr, ptr, original_payload);
+
+		// 6. free the old pointer
+		sf_free(ptr);
+
+		return new_payload_addr;
+
+	}else{
+		//We have to make the block smaller now, while freeing whatever memory is necessary.
+		//If the memory is < 32 bytes, we have to add it to the splinter of this block
+		//And free nothing.
+
+		// size_t next_block_size = next_block->block_size<<4;
+		// size_t current_block_size = current_block->block_size<<4;
+		// size_t original_payload = current_block_size - (current_block->padding_size+current_block->splinter_size);
+		// size_t total_possible_size = next_block_size + current_block_size - HF_SIZE;
+		// size_t requested_resize = roundup(size/LINE_SIZE)*LINE_SIZE;
+		// size_t total_requested_resize = requested_resize+HF_SIZE;
+		// long net_change = (long)total_requested_resize - (long)current_block_size;
+
+		size_t final_block_size = (long)current_block_size - (long)total_requested_resize;
+
+		current_block->block_size = final_block_size>>4;
+
+		sf_footer *new_footer = get_footer(current_block);
+
+		new_footer->block_size = final_block_size>>4;
+
+
+
+		return ptr;
+
+	}
+
 }
 
 void sf_free(void* ptr) {
@@ -52,6 +167,12 @@ void sf_free(void* ptr) {
 		return;
 
 	sf_free_header *block_to_free = (sf_free_header*)((unsigned long)ptr-SF_HEADER_SIZE);
+
+	if(!block_to_free->header.alloc || block_to_free->header.block_size <= 0){
+		errno = EINVAL;
+		return;
+	}
+
 	sf_footer *free_footer = get_footer((sf_header*)block_to_free);
 
 	//Initialize all the fields to zero
@@ -372,8 +493,6 @@ void insert_into_freelist(sf_free_header* block_to_insert){
 
 }
 
-//Coalesces a free block with any surrounding free blocks
-//TODO
 sf_free_header *coalesce(sf_free_header* block_to_coalesce){
 
 	debug("Entered coalesce with (%p) [%lu]\n", SHORT_ADDR(block_to_coalesce), (unsigned long)block_to_coalesce);
@@ -386,7 +505,7 @@ sf_free_header *coalesce(sf_free_header* block_to_coalesce){
 
 	sf_header *next_header = (sf_header*)((unsigned long)footer_to_coalesce+SF_FOOTER_SIZE);
 	sf_footer *next_footer = get_footer(next_header);
-	dummy(next_footer);
+	(void)next_footer;
 
 	int next_is_coalescable = !next_header->alloc && header_to_coalesce->next != NULL;
 	int prev_is_coalescable = !prev_header->alloc && header_to_coalesce->prev != NULL;
@@ -532,6 +651,7 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 		debug("Free block footer address: (%p)\n", SHORT_ADDR((void*)original_free_footer));
 
 		insert_into_freelist(newFreeBlock);
+		coalesce(newFreeBlock);
 		debug("Freelist length: %d\n", freelist_length());
 
 		debug("Final block address: (%p) [%lu]\n", SHORT_ADDR((void*)alloc_header), (unsigned long)alloc_header);
@@ -607,7 +727,3 @@ void freelist_info(){
 	warn("%s", "Exited freelist\n");
 
 }
-
-//Serves no purpose other than to get rid of
-//Unused variable warnings
-void dummy(void* dummy){}

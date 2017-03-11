@@ -1,8 +1,11 @@
 #ifndef SFMM_UTILS_H
 #define SFMM_UTILS_H
 
+#include "sfmm.h"
+
 #define PAGE_SIZE (4096.0)
 #define LINE_SIZE (16.0)
+#define HF_SIZE SF_FOOTER_SIZE+SF_HEADER_SIZE
 
 #define SHORT_ADDR(V) ((void*)(((unsigned long)V<<48)>>48))
 
@@ -21,7 +24,6 @@ do{ 														\
 }while(0)													\
 
 
-void dummy(void*);
 int roundup(double);
 void *allocate_from_free_block(sf_free_header*, size_t);
 void insert_into_freelist(sf_free_header*);
@@ -35,5 +37,6 @@ sf_free_header *find_in_freelist(void*);
 int freelist_contains(sf_free_header*);
 sf_free_header *merge_blocks(sf_free_header*, sf_free_header*);
 sf_free_header *get_heap_space(size_t);
+void remove_from_freelist(sf_free_header*);
 
 #endif

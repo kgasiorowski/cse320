@@ -59,22 +59,30 @@ int main(int argc, char *argv[]) {
     info("Initialized heap with %dmb of heap space.\n", MAX_HEAP_SIZE >> 20);
     press_to_cont();
 
-    int *mem1 = sf_malloc(sizeof(int));
-    int *mem2 = sf_malloc(sizeof(int)*10);
+    int *mem1 = sf_malloc(sizeof(int)*10);
     freelist_info();
 
     *mem1 = 320;
 
     assert(*mem1 == 320);
 
-    mem1 = sf_realloc(mem1, sizeof(int)*5);
+    mem1 = sf_realloc(mem1, sizeof(int)*9);
     freelist_info();
 
     assert(*mem1 == 320);
 
+    sf_header *temp = (sf_header*)((unsigned long)mem1-SF_HEADER_SIZE);
+
+    assert(temp->splinter == 0);
+
     sf_free(mem1);
-    sf_free(mem2);
     freelist_info();
+
+    info *myinfo = NULL;
+
+    sf_info(myinfo);
+
+    assert(myinfo != NULL);
 
     // // Print out title for first test
     // printf("=== Test1: Allocation test ===\n");

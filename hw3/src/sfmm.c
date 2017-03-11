@@ -17,6 +17,7 @@
  * which will allow you to pass the address to sf_snapshot in a different file.
  */
 sf_free_header* freelist_head = NULL;
+info prgm_info;
 
 void *sf_malloc(size_t size) {
 
@@ -143,15 +144,44 @@ void *sf_realloc(void *ptr, size_t size) {
 		// size_t total_requested_resize = requested_resize+HF_SIZE;
 		// long net_change = (long)total_requested_resize - (long)current_block_size;
 
-		size_t final_block_size = (long)current_block_size - (long)total_requested_resize;
+		size_t new_free_block_size = -(net_change);
+		size_t final_block_size = (long)current_block_size - (long)new_free_block_size;
 
-		current_block->block_size = final_block_size>>4;
+		debug("New free block will have size: %lu\n", new_free_block_size);
+		debug("Original block will have size: %lu (from %lu)\n", final_block_size, current_block_size);
 
-		sf_footer *new_footer = get_footer(current_block);
+		if(new_free_block_size < LINE_SIZE+HF_SIZE){
 
-		new_footer->block_size = final_block_size>>4;
+			debug("%s","New free block will be a splinter!!!\n");
+			current_block->splinter = 1;
+			current_block->splinter_size = new_free_block_size;
 
+			current_footer->splinter = 1;
 
+			prgm_info.splintering += new_free_block_size;
+			prgm_info.splinterBlocks++;
+
+		}else{
+
+			current_block->block_size = final_block_size>>4;
+			sf_footer *new_alloc_footer = get_footer(current_block);
+			new_alloc_footer->block_size = final_block_size>>4;
+			new_alloc_footer->alloc = 1;
+			new_alloc_footer->splinter = 0;
+
+			sf_free_header *new_free_head = (void*)((unsigned long)new_alloc_footer+SF_FOOTER_SIZE);
+			new_free_head->header.block_size = new_free_block_size>>4;
+			new_free_head->header.alloc = 0;
+
+			sf_footer *new_free_footer = get_footer((sf_header*)new_free_head);
+			new_free_footer->alloc = 0;
+			new_free_footer->splinter = 0;
+			new_free_footer->block_size = new_free_block_size>>4;
+
+			insert_into_freelist(new_free_head);
+			coalesce(new_free_head);
+
+		}
 
 		return ptr;
 
@@ -193,12 +223,26 @@ void sf_free(void* ptr) {
 	debug("Freelist length: %d\n", freelist_length());
 	coalesce(block_to_free);
 
+	prgm_info.allocatedBlocks--;
+
 	return;
 
 }
 
 int sf_info(info* ptr) {
-	return -1;
+
+
+	if(ptr == NULL)
+		return -1;
+
+	ptr->allocatedBlocks = prgm_info.allocatedBlocks;
+	ptr->splinterBlocks = prgm_info.splinterBlocks;
+	ptr->padding = prgm_info.padding;
+	ptr->splintering = prgm_info.splintering;
+	ptr->coalesces = prgm_info.coalesces;
+	ptr->peakMemoryUtilization = prgm_info.peakMemoryUtilization;
+
+	return 0;
 }
 
 ////////////////////////////////////////////////////////
@@ -528,6 +572,8 @@ sf_free_header *coalesce(sf_free_header* block_to_coalesce){
 		remove_from_freelist((sf_free_header*)prev_header);
 		header_to_coalesce = merge_blocks((sf_free_header*)prev_header, header_to_coalesce);
 
+		prgm_info.coalesces++;
+
 	}
 
 	debug("Next block header addr: (%p) [%lu]\n", SHORT_ADDR(next_header), (unsigned long)next_header);
@@ -544,6 +590,8 @@ sf_free_header *coalesce(sf_free_header* block_to_coalesce){
 		//	remove it from the freelist
 		remove_from_freelist((sf_free_header*)next_header);
 		header_to_coalesce = merge_blocks(header_to_coalesce, (sf_free_header*)next_header);
+
+		prgm_info.coalesces++;
 
 	}
 
@@ -571,7 +619,6 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 
 	size_t original_free_block_size = free_header->header.block_size<<4;
 
-
 	//Remove the free block since we're about to allocate some of it
 	remove_from_freelist(freeblock);
 
@@ -587,6 +634,9 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 	block_size = payload_size + SF_FOOTER_SIZE + SF_HEADER_SIZE;
 	remaining_free_size = original_free_block_size-block_size;
 
+	if(!padding_size)
+		prgm_info.padding++;
+
 	sf_header *alloc_header = (void*)freeblock;
 
 
@@ -595,6 +645,9 @@ void *allocate_from_free_block(sf_free_header* freeblock, size_t requested_size)
 		splinter_size = remaining_free_size;
 		alloc_header->splinter = 1;
 		alloc_header->splinter_size = splinter_size;
+
+		prgm_info.splinterBlocks++;
+		prgm_info.splintering += splinter_size;
 
 	}else{
 

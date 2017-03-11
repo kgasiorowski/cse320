@@ -21,8 +21,7 @@ do{ 														\
 do{ 														\
 	if((unsigned long)ptr % 16 != 0)						\
 		warn("Pointer %s is not divisible by 16!\n", ptrname);	\
-}while(0)													\
-
+}while(0)
 
 int roundup(double);
 void *allocate_from_free_block(sf_free_header*, size_t);

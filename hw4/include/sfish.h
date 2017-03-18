@@ -8,4 +8,7 @@
 #include <string.h>
 #include <string.h>
 
+void execute_command(const char *);
+int is_builtin(const char *);
+
 #endif

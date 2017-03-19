@@ -12,7 +12,7 @@ int main(int argc, char const *argv[], char* envp[]){
     const char *cmd;
     while((cmd = readline("sfish> ")) != NULL) {
 
-        execute_command(cmd);
+
 
         printf("%s\n",cmd);
         /* All your debug print statements should use the macros found in debu.h */
@@ -22,6 +22,9 @@ int main(int argc, char const *argv[], char* envp[]){
 
         info("Length of command entered: %ld\n", strlen(cmd));
         /* You WILL lose points if your shell prints out garbage values. */
+
+        execute_command(cmd);
+
     }
 
     printf("logout\n");

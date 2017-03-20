@@ -1,29 +1,30 @@
 #include "sfish.h"
+#include "debug.h"
 
-void execute_command(const char *command){
+void execute_command(char **cmdtok){
 
 	//If it is a recognized built-in command
-	if(is_builtin(command)){
+	if(is_builtin(cmdtok[0])){
 
-		if(strcmp(command, "exit") == 0){
+		if(strcmp(cmdtok[0], "exit") == 0){
 
 			exit(EXIT_SUCCESS);
 
-		}else if(strcmp(command, "help") == 0){
+		}else if(strcmp(cmdtok[0], "help") == 0){
 
 			print_help();
 
-		}else if(strcmp(command, "cd") == 0){
+		}else if(strcmp(cmdtok[0], "cd") == 0){
 
+			debug("%s","cd was entered\n");
 
+		}else if(strcmp(cmdtok[0], "pwd") == 0){
 
-		}else if(strcmp(command, "pwd") == 0){
-
-			pwd();
+			debug("%s", "pwd was entered");
 
 		}else{
 
-			printf("command not found: %s", command);
+			printf("command not found: %s\n", cmdtok[0]);
 
 		}
 
@@ -39,28 +40,6 @@ void execute_command(const char *command){
 }
 
 char *pwd(){
-
-	pid_t pid = fork();
-
-	if(pid == 0){
-		//Child
-		size_t buffersize = 100;
-		char *buffer = (char*)malloc(sizeof(char)*buffersize);
-
-		if(buffer == NULL){
-
-			fprintf(stderr, "Not enough memory!\n");
-
-		}
-
-		getcwd(buffer, buffersize);
-		printf("%s\n", buffer);
-
-	}else{
-		//Parent
-		return NULL;
-
-	}
 
 	return NULL;
 

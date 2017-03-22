@@ -10,6 +10,8 @@
 #include <string.h>
 #include <errno.h>
 
+#define PATH_BUFFER_SIZE 1024
+
 #define print_help() do {										\
 const char* fmt = " %-10s%-40s\n";								\
 printf("\nKuba Gasiorowski\nShell Implemented in CSE320\n\n");	\
@@ -20,8 +22,11 @@ printf(fmt, "exit", "Exits the shell cleanly");					\
 printf("\n");													\
 }while(0)
 
-void execute_command(char **);
+int execute_command(char **, int);
 int is_builtin(const char *);
 void pwd();
+
+void init();
+void finish();
 
 #endif

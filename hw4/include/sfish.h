@@ -10,12 +10,18 @@
 #include <string.h>
 #include <errno.h>
 
-#define print_help() do { 	\
-printf("HELP MENU\n");		\
+#define print_help() do {										\
+const char* fmt = " %-10s%-40s\n";								\
+printf("\nKuba Gasiorowski\nShell Implemented in CSE320\n\n");	\
+printf(fmt,"Help","Displays this message");						\
+printf(fmt, "cd", "Changes directory to the specified path");	\
+printf(fmt, "pwd", "Prints the current working directory");		\
+printf(fmt, "exit", "Exits the shell cleanly");					\
+printf("\n");													\
 }while(0)
 
 void execute_command(char **);
 int is_builtin(const char *);
-char *pwd();
+void pwd();
 
 #endif

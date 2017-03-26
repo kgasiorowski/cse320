@@ -12,6 +12,8 @@ int execute_command(char **cmdtok, int numargs){
 	//If it is a recognized built-in command
 	if(is_builtin(cmdtok[0])){
 
+		debug("%s","Builtin detected\n");
+
 		if(strcmp(cmdtok[0], "exit") == 0){
 
 			finish();
@@ -178,7 +180,7 @@ int execute_command(char **cmdtok, int numargs){
 
 		}else if(strcmp(cmdtok[0], "pwd") == 0){
 
-			debug("%s", "pwd was entered");
+			debug("%s\n", "pwd was entered");
 			pwd();
 			printf("\n");
 
@@ -189,11 +191,93 @@ int execute_command(char **cmdtok, int numargs){
 		}
 
 
-	//If not...
+	//If not, search for and then execute it
 	}else{
 
+		char *PATH = getenv("PATH");
+		char *pathcopy = (char*)malloc(sizeof(char)*(strlen(PATH)+1));
+		memcpy(pathcopy, PATH, strlen(PATH)+1);
+
+		debug("Path variable: %s\n", pathcopy);
+
+		//Space for 100 paths
+		char **paths = (char**)malloc(sizeof(char*)*100);
+		const char **PATHS_PTR = (const char**)paths;
+
+		*paths = strtok(pathcopy, ":");
+
+		while(*paths != NULL){
+
+			debug("Path scanned: %s\n", *paths);
+			*(++paths) = strtok(NULL, ":");
+
+		}
+
+		*(paths+1) = NULL;
+		paths = (char**)PATHS_PTR;
+
+		struct stat *fs = (struct stat*)malloc(sizeof(struct stat));
+		char *path = (char*)malloc(sizeof(char)* (strlen(*paths) + strlen(cmdtok[0]) + 2) );
+
+		while(*paths != NULL){
+
+			strcpy(path, *paths);
+			strcat(path, "/");
+			strcat(path, cmdtok[0]);
+			strcat(path, "\0");
+
+			debug("Created path: %s. Checking...\n", path);
+
+			if(stat(path, fs) == -1){
+
+				if(errno == ENOENT){
+
+					//File does not exist
+					debug("File not found at path: %s\n", path);
+					paths++;
+					continue;
+
+				}else{
+
+					//There was some other error
+					debug("There was some other error at path: %s\n", path);
+					return 0;
+
+				}
+
+			}else{
+
+				debug("Found program %s at path %s. Forking and executing\n", cmdtok[0], path);
+
+				pid_t pid = fork();
+
+				if(pid < 0){
+
+					error("%s","Fork failed in execution of command\n");
+
+				}else if(pid == 0){
+					//Child
+					execv(path, cmdtok); //Should never return
+
+					error("Something went wrong with executing %s\n", path);
+					exit(EXIT_FAILURE);
 
 
+				}else{
+					//Parent
+					wait(NULL);
+
+				}
+
+				return 1;
+
+			}
+
+		}
+
+		// free(fs);
+		// free(path);
+		// free(paths);
 
 	}
 
@@ -229,7 +313,7 @@ void pwd(){
 //Return true if the command is a builtin, false otherwise
 int is_builtin(const char *command){
 
-	return strcmp(command, "help") || strcmp(command, "exit") || strcmp(command, "cd") || strcmp(command, "pwd");
+	return !strcmp(command, "help") || !strcmp(command, "exit") || !strcmp(command, "cd") || !strcmp(command, "pwd");
 
 }
 

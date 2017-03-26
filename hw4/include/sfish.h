@@ -9,6 +9,8 @@
 #include <string.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define PATH_BUFFER_SIZE 1024
 

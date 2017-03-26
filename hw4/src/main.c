@@ -22,7 +22,7 @@ int main(int argc, char const *argv[], char* envp[]){
 
     strcpy(command_prompt, "<kgasiorowski> : <");
     strcat(command_prompt, pwd);
-    strcat(command_prompt, "> $");
+    strcat(command_prompt, "> $ ");
 
     while((cmd = readline(command_prompt)) != NULL) {
 
@@ -43,7 +43,7 @@ int main(int argc, char const *argv[], char* envp[]){
 
         while(cmdtok[tokcounter] != NULL){
 
-            debug("Token %d: %s\n", tokcounter, cmdtok[tokcounter]);
+            debug("Token %d: <%s> Length: %lu\n", tokcounter, cmdtok[tokcounter], strlen(cmdtok[tokcounter]));
             cmdtok[++tokcounter] = strtok(NULL, delim);
 
         }
@@ -52,8 +52,6 @@ int main(int argc, char const *argv[], char* envp[]){
         /* All your debug print statements should use the macros found in debu.h */
         /* Use the `make debug` target in the makefile to run with these enabled. */
 
-
-        debug("Length of command entered: %ld\n", strlen(cmd));
         debug("Number of arguments passed: %d\n", tokcounter);
         /* You WILL lose points if your shell prints out garbage values. */
 
@@ -64,7 +62,7 @@ int main(int argc, char const *argv[], char* envp[]){
 
         strcpy(command_prompt, "<kgasiorowski> : <");
         strcat(command_prompt, pwd);
-        strcat(command_prompt, "> $");
+        strcat(command_prompt, "> $ ");
 
     }
 

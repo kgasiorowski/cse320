@@ -26,6 +26,7 @@ printf("\n");													\
 
 int execute_command(char **, int);
 int is_builtin(const char *);
+void execute(char *path, char **args);
 void pwd();
 void cd(int numargs, char **cmdtok);
 

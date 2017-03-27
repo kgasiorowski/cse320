@@ -49,6 +49,38 @@ int execute_command(char **cmdtok, int numargs){
 	//If not, search for and then execute it
 	}else{
 
+		//Check if the path has the '/' character
+		if(strchr(cmdtok[0], '/') != NULL){
+
+			struct stat * const fs = (struct stat*)malloc(sizeof(struct stat));
+
+			if(stat(cmdtok[0], fs) == -1){
+
+				if(errno == ENOENT){
+					//File does not exist
+					debug("File not found at path: %s\n", cmdtok[0]);
+
+				}else{
+					//There was some other error
+					debug("There was some other error at path: %s\n", cmdtok[0]);
+					return 0;
+
+				}
+
+				return 1;
+
+			}else{
+
+				execute(cmdtok[0], cmdtok);
+
+			}
+
+			free(fs);
+			return 1;
+
+		}
+
+		//If it isn't - gotta check all the paths
 		char * const PATH = getenv("PATH");
 		char *pathcpy = (char*)malloc(sizeof(char) * (strlen(PATH)+1));
 
@@ -108,26 +140,7 @@ int execute_command(char **cmdtok, int numargs){
 
 				debug("Found program %s at path %s. Forking and executing\n", cmdtok[0], path);
 
-				pid_t pid = fork();
-
-				if(pid < 0){
-
-					error("%s","Fork failed in execution of command\n");
-
-				}else if(pid == 0){
-					//Child
-					debug("%s","About to execute!\n");
-					execv(path, cmdtok); //Should never return
-
-					error("Something went wrong with executing %s\n", path);
-					exit(EXIT_FAILURE);
-
-
-				}else{
-					//Parent
-					wait(NULL);
-
-				}
+				execute(path, cmdtok);
 
 				debug("%s","First free\n");
 				free(fs);
@@ -148,6 +161,32 @@ int execute_command(char **cmdtok, int numargs){
 	}
 
 	return 1;
+
+}
+
+void execute(char *path, char **args){
+
+	debug("%s","Entered execute func\n");
+
+	pid_t pid = fork();
+
+	if(pid < 0){
+
+		error("%s","Fork failed in execution of command\n");
+
+	}else if(pid == 0){
+		//Child
+		debug("%s","About to execute!\n");
+		execv(path, args); //Should never return
+
+		error("Something went wrong with executing %s\n", path);
+		exit(EXIT_FAILURE);
+
+	}else{
+		//Parent
+		wait(NULL);
+
+	}
 
 }
 
@@ -224,8 +263,8 @@ void cd(int numargs, char **cmdtok){
 			char *path = getcwd(NULL,0);
 
 			//Directory list
-			char ** const directory_list = malloc(sizeof(char*)*100);
-			char **cursor = directory_list;
+			char ** const DIRECTORY_LIST = malloc(sizeof(char*)*100);
+			char **cursor = DIRECTORY_LIST;
 
 			int counter = 0;
 			*cursor = strtok(path, delims);
@@ -248,7 +287,7 @@ void cd(int numargs, char **cmdtok){
 
 			*new_path = '/';
 
-			cursor = (char**)directory_list;
+			cursor = (char**)DIRECTORY_LIST;
 
 			int i = 0;
 			for(;i<counter-1;i++){
@@ -266,7 +305,7 @@ void cd(int numargs, char **cmdtok){
 
 			free(path);
 			free(new_path);
-			free(directory_list);
+			free(DIRECTORY_LIST);
 
 		}else if(strcmp(cmdtok[1], "-") == 0){
 			//Go to the last directory
@@ -314,7 +353,10 @@ void cd(int numargs, char **cmdtok){
 			last_directory = getcwd(NULL, 0);
 
 			//Try relative path
-			char * const buf = getcwd(0,0);
+			// char * const buf = getcwd(NULL,0);
+
+			char *buf = (char*)calloc(256, sizeof(char));
+			getcwd(buf, 256);
 
 			debug("Current path: %s\n", buf);
 

@@ -49,15 +49,18 @@ int execute_command(char **cmdtok, int numargs){
 	//If not, search for and then execute it
 	}else{
 
-		char *PATH = getenv("PATH");
+		char * const PATH = getenv("PATH");
+		char *pathcpy = (char*)malloc(sizeof(char) * (strlen(PATH)+1));
 
-		debug("Path variable: %s\n", PATH);
+		strcpy(pathcpy, PATH);
+
+		debug("Path variable: %s\n", pathcpy);
 
 		//Space for 100 paths
 		char ** const PATHS_PTR = (char**)calloc(100, sizeof(char*));
 		char **paths = PATHS_PTR;
 
-		*paths = strtok(PATH, ":");
+		*paths = strtok(pathcpy, ":");
 
 		while(*paths != NULL){
 
@@ -66,14 +69,15 @@ int execute_command(char **cmdtok, int numargs){
 
 		}
 
-		//Null-terminate the string
-		*(paths+1) = 0;
-		paths = (char**)PATHS_PTR;
+		//Reset to the original pointer
+		paths = PATHS_PTR;
 
 		struct stat * const fs = (struct stat*)malloc(sizeof(struct stat));
-		char * const path = (char*)malloc(sizeof(char)* (strlen(*paths) + strlen(cmdtok[0]) + 2) );
+		char *path;
 
 		while(*paths != NULL){
+
+			path = (char*)malloc(sizeof(char)* (strlen(*paths) + strlen(cmdtok[0]) + 3) );
 
 			strcpy(path, *paths);
 			strcat(path, "/");
@@ -88,6 +92,7 @@ int execute_command(char **cmdtok, int numargs){
 
 					//File does not exist
 					debug("File not found at path: %s\n", path);
+					free(path);
 					paths++;
 					continue;
 

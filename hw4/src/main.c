@@ -12,7 +12,6 @@ int main(int argc, char const *argv[], char* envp[]){
     /* This is disable readline's default signal handlers, since you are going to install your own.*/
 
     const char *cmd;
-    char *pwd = NULL;
 
     char *command_prompt = (char*)malloc(sizeof(char)*PATH_BUFFER_SIZE);
     null_check(command_prompt);
@@ -21,18 +20,9 @@ int main(int argc, char const *argv[], char* envp[]){
     char **cmdtok = (char**)malloc(sizeof(char*)*20);
     null_check(cmdtok);
 
-    debug("%s","Test 1\n");
-
-    pwd = getcwd(NULL, 0);
-
-    debug("%s", "Test 2\n");
-
     strcpy(command_prompt, "<kgasiorowski> : <");
-    strcat(command_prompt, pwd);
+    strcat(command_prompt, getcwd(NULL, 0));
     strcat(command_prompt, "> $ ");
-
-    free(pwd);
-    pwd = NULL;
 
     int finished = 0;
     while(!finished) {
@@ -51,28 +41,18 @@ int main(int argc, char const *argv[], char* envp[]){
 
         }
 
-        debug("%s\n",cmd);
-        /* All your debug print statements should use the macros found in debu.h */
-        /* Use the `make debug` target in the makefile to run with these enabled. */
-
-        debug("Number of arguments passed: %d\n", tokcounter);
-        /* You WILL lose points if your shell prints out garbage values. */
-
         if(!execute_command(cmdtok, tokcounter))
             finished = 1;
 
-        pwd = getcwd(NULL, 0);
-
         strcpy(command_prompt, "<kgasiorowski> : <");
-        strcat(command_prompt, pwd);
+        strcat(command_prompt, getcwd(NULL, 0));
         strcat(command_prompt, "> $ ");
 
-        free(pwd);
+        free((void*)cmd);
 
     }
 
     /* Don't forget to free allocated memory, and close file descriptors. */
-    free((void*)cmd);
     free(command_prompt);
     free(cmdtok);
 

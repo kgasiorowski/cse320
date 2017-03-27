@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define PATH_BUFFER_SIZE 1024
+#define PATH_BUFFER_SIZE 512
 
 #define print_help() do {										\
 const char* fmt = " %-10s%-40s\n";								\
@@ -27,8 +27,10 @@ printf("\n");													\
 int execute_command(char **, int);
 int is_builtin(const char *);
 void pwd();
+void cd(int numargs, char **cmdtok);
 
-void init();
 void finish();
+
+void null_check(void*);
 
 #endif

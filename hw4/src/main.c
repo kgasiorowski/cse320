@@ -11,30 +11,33 @@ int main(int argc, char const *argv[], char* envp[]){
     rl_catch_signals = 0;
     /* This is disable readline's default signal handlers, since you are going to install your own.*/
 
-    init();
-
     const char *cmd;
-
-    char *pwd = (char*)malloc(sizeof(char)*PATH_BUFFER_SIZE);
-    getcwd(pwd, PATH_BUFFER_SIZE);
+    char *pwd = NULL;
 
     char *command_prompt = (char*)malloc(sizeof(char)*PATH_BUFFER_SIZE);
+    null_check(command_prompt);
+
+    //Make space for up to 20 command line arguments
+    char **cmdtok = (char**)malloc(sizeof(char*)*20);
+    null_check(cmdtok);
+
+    debug("%s","Test 1\n");
+
+    pwd = getcwd(NULL, 0);
+
+    debug("%s", "Test 2\n");
 
     strcpy(command_prompt, "<kgasiorowski> : <");
     strcat(command_prompt, pwd);
     strcat(command_prompt, "> $ ");
 
-    while((cmd = readline(command_prompt)) != NULL) {
+    free(pwd);
+    pwd = NULL;
 
-        //Make space for up to 20 command line arguments
-        char **cmdtok = (char**)malloc(sizeof(char*)*20);
+    int finished = 0;
+    while(!finished) {
 
-        if(cmdtok == NULL){
-
-            error("%s", "Out of memory!\n");
-            exit(EXIT_FAILURE);
-
-        }
+        cmd = readline(command_prompt);
 
         int tokcounter = 0;
         const char *delim = " ";
@@ -56,20 +59,22 @@ int main(int argc, char const *argv[], char* envp[]){
         /* You WILL lose points if your shell prints out garbage values. */
 
         if(!execute_command(cmdtok, tokcounter))
-            break;
+            finished = 1;
 
-        getcwd(pwd, PATH_BUFFER_SIZE);
+        pwd = getcwd(NULL, 0);
 
         strcpy(command_prompt, "<kgasiorowski> : <");
         strcat(command_prompt, pwd);
         strcat(command_prompt, "> $ ");
 
+        free(pwd);
+
     }
 
     /* Don't forget to free allocated memory, and close file descriptors. */
     free((void*)cmd);
-    free(pwd);
     free(command_prompt);
+    free(cmdtok);
 
     return EXIT_SUCCESS;
 }

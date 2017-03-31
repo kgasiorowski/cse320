@@ -1,5 +1,7 @@
 #include "sfish.h"
 #include "debug.h"
+#include <stdio.h>
+#include <fcntl.h>
 
 int execute_command(char **cmdtok, int numargs){
 
@@ -81,7 +83,16 @@ int execute_command(char **cmdtok, int numargs){
 
 			free(path_to_exec);
 
-		}else if(pipedata->numpipes == 0 && pipedata->left_angle == 0 && pipedata->right_angle == 1){
+		}else if(pipedata->numpipes == 0 && (pipedata->left_angle == 1 || pipedata->right_angle == 1)){
+
+			char *cmd = searchPATH(cmdtok[0]);
+
+			if(cmd == NULL){
+
+				fprintf(stderr, "Command not found: %s\n", cmd);
+				return 1;
+
+			}
 
 			pid_t pid = fork();
 
@@ -91,6 +102,32 @@ int execute_command(char **cmdtok, int numargs){
 
 			}else if(pid == 0){
 				//Child
+				int in = open(pipedata->infile, O_RDONLY);
+				int out = open(pipedata->outfile, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+
+				if(in != -1){
+
+					dup2(in, 0);
+					close(in);
+					debug("%s","Input being redirected!\n");
+
+				}
+
+				if(out != -1){
+
+					dup2(out, 1);
+					close(out);
+					debug("%s","Output being redirected!\n");
+
+				}
+
+				debug("%s","Child executing with arguments:\n");
+				dispStringArr(pipedata->prgm1_args);
+
+				execv(cmd, pipedata->prgm1_args); //Should never return
+
+				error("%s","Error! Program could not execute\n");
+				exit(EXIT_FAILURE);
 
 			}else{
 				//Parent

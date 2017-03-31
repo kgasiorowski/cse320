@@ -112,7 +112,7 @@ char *searchPATH(char *cmd){
 
 }
 
-void dispStringArr(char **argv, int argc){
+void dispStringArr(char **argv){
 
 	while(*argv != NULL){
 
@@ -196,7 +196,7 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 	}
 
 	//Figure out program 2 and 3 after the fact
-	if(pipe_bits->pipe1_index != -1){
+	if(pipe_bits->numpipes >= 1){
 
 		//There exists a pipe. We have to copy some args
 		pipe_bits->prgm1_args = (char**)calloc(NUM_ARGS, sizeof(char*));
@@ -217,7 +217,7 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 		pipe_bits->prgm1_args[pipe_bits->pipe1_index] = NULL;
 
 		debug("Number of arguments in prgm 1: %d\n", pipe_bits->prgm1_numargs);
-		dispStringArr(pipe_bits->prgm1_args, pipe_bits->prgm1_numargs);
+		dispStringArr(pipe_bits->prgm1_args);
 
 		//Check if there's a second pipe
 		if(pipe_bits->pipe2_index != -1){
@@ -234,7 +234,7 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 			pipe_bits->prgm2_numargs = pipe_bits->pipe2_index - pipe_bits->prgm1_numargs - 1;
 
 			debug("Number of arguments in prgm 2: %d\n", pipe_bits->prgm2_numargs);
-			dispStringArr(pipe_bits->prgm2_args, pipe_bits->prgm2_numargs);
+			dispStringArr(pipe_bits->prgm2_args);
 
 			for(int i = pipe_bits->pipe2_index+1; i < argc; i++){
 
@@ -245,7 +245,7 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 			pipe_bits->prgm3_numargs = argc - pipe_bits->pipe2_index - 1;
 
 			debug("Number of arguments in prgm 3: %d\n", pipe_bits->prgm3_numargs);
-			dispStringArr(pipe_bits->prgm3_args, pipe_bits->prgm3_numargs);
+			dispStringArr(pipe_bits->prgm3_args);
 
 		}else{
 
@@ -259,9 +259,32 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 			pipe_bits->prgm2_numargs = argc - pipe_bits->prgm1_numargs - 1;
 
 			debug("Number of arguments in prgm 2: %d\n", pipe_bits->prgm2_numargs);
-			dispStringArr(pipe_bits->prgm2_args, pipe_bits->prgm2_numargs);
+			dispStringArr(pipe_bits->prgm2_args);
 
 		}
+
+	}else{
+
+		pipe_bits->prgm1_args = (char**)calloc(NUM_ARGS, sizeof(char*));
+
+		int index_to_loop_until = 0;
+
+		if(pipe_bits->right_angle_index == -1)
+			index_to_loop_until = pipe_bits->left_angle_index;
+		else if(pipe_bits->left_angle_index == -1)
+			index_to_loop_until = pipe_bits->right_angle_index;
+		else
+			index_to_loop_until = pipe_bits->left_angle_index;
+
+		for(int i = 0; i < index_to_loop_until; i++){
+
+			pipe_bits->prgm1_args[i] = argv[i];
+
+		}
+		pipe_bits->prgm1_numargs = index_to_loop_until;
+
+		debug("Number of arguments in prgm 2: %d\n", pipe_bits->prgm1_numargs);
+		dispStringArr(pipe_bits->prgm1_args);
 
 	}
 

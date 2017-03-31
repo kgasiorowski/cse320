@@ -61,6 +61,7 @@ void pwd();
 void cd(int numargs, char **cmdtok);
 PipeData *pipe_parse_commands(char **argv, int argc);
 char *searchPATH(char *cmd);
+void dispStringArr(char **argv);
 
 void finish();
 

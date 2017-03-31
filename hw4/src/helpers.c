@@ -84,6 +84,7 @@ char *searchPATH(char *cmd){
 					//File does not exist
 					debug("File not found at path: %s\n", path);
 					free(path);
+					path = NULL;
 					paths++;
 					continue;
 
@@ -108,6 +109,7 @@ char *searchPATH(char *cmd){
 
 	}
 
+	debug("Returning: %s\n", path);
 	return path;
 
 }
@@ -129,6 +131,8 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 	pipe_bits->numpipes = 0;
 	pipe_bits->left_angle = 0;
 	pipe_bits->right_angle = 0;
+
+	pipe_bits->error = 0;
 
 	pipe_bits->prgm1_args = argv;
 	pipe_bits->prgm1_numargs = argc;
@@ -158,6 +162,13 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 
 			debug("Pipe detected at index: %d\n", i);
 
+			if(i == 0 || i == argc-1){
+
+				pipe_bits->error = 1;
+				return pipe_bits;
+
+			}
+
 			pipe_bits->numpipes++;
 
 			if(pipe_bits->numpipes == 1){
@@ -176,6 +187,15 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 		}else if(strcmp(argv[i], ">") == 0){
 
 			debug("Index of right angle: %d\n", i);
+
+			if(i == 0 || i == argc-1)
+			{
+
+				pipe_bits->error = 1;
+				return pipe_bits;
+
+			}
+
 			pipe_bits->right_angle++;
 			pipe_bits->right_angle_index = i;
 
@@ -185,6 +205,15 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 		}else if(strcmp(argv[i], "<") == 0){
 
 			debug("Index of left angle: %d\n", i);
+
+			if(i == 0 || i == argc-1)
+			{
+
+				pipe_bits->error = 1;
+				return pipe_bits;
+
+			}
+
 			pipe_bits->left_angle++;
 			pipe_bits->left_angle_index = i;
 

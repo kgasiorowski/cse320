@@ -33,6 +33,8 @@ typedef struct Pipe_bits{
 	unsigned char left_angle : 1;
 	unsigned char right_angle : 1;
 
+	unsigned char error : 1;
+
 	char **prgm1_args;
 	unsigned int prgm1_numargs;
 	char **prgm2_args;

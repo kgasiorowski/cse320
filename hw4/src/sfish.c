@@ -11,6 +11,13 @@ int execute_command(char **cmdtok, int numargs){
 
 	PipeData *pipedata = pipe_parse_commands(cmdtok, numargs);
 
+	if(pipedata->error == 1){
+
+		fprintf(stderr, "Error: Invalid command sequence\n");
+		return 1;
+
+	}
+
 	debug("Piping data: %d %d %d\n", pipedata->numpipes, pipedata->left_angle, pipedata->right_angle);
 
 	//Cover 6 cases.
@@ -134,6 +141,55 @@ int execute_command(char **cmdtok, int numargs){
 				wait(NULL);
 
 			}
+
+
+		}else if(pipedata->numpipes == 1 && pipedata->left_angle == 0 && pipedata->right_angle == 0){
+
+			int fd[2];
+			pipe(fd);
+
+			char *cmd1 = searchPATH(*(pipedata->prgm1_args));
+			char *cmd2 = searchPATH(*(pipedata->prgm2_args));
+
+			if(cmd1 == NULL){
+
+				fprintf(stderr, "Command not found: %s\n", *(pipedata->prgm1_args));
+				return 1;
+
+			}
+
+			if(cmd2 == NULL){
+
+				fprintf(stderr, "Command not found %s\n", *(pipedata->prgm2_args));
+				return 1;
+
+			}
+
+			/*
+
+			pid_t pid = fork();
+
+			if(pid < 0){
+
+				error("%s","Error forking\n");
+				return 1;
+
+			}else if(pid == 0){
+				//Child
+				exit(0);
+
+			}else{
+				//Parent
+				wait(&pid);
+				dup2(fd[0], 0);
+
+
+
+			}
+			*/
+
+		}else if(pipedata->numpipes == 2 && pipedata->left_angle == 0 && pipedata->right_angle == 0){
+
 
 
 		}

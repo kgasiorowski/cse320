@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 
 #define PATH_BUFFER_SIZE 512
+#define NUM_ARGS 30
 
 #define print_help() do {										\
 const char* fmt = " %-10s%-40s\n";								\
@@ -24,11 +25,42 @@ printf(fmt, "exit", "Exits the shell cleanly");					\
 printf("\n");													\
 }while(0)
 
+extern char *last_directory;
+
+typedef struct Pipe_bits{
+
+	unsigned char numpipes : 2;
+	unsigned char left_angle : 1;
+	unsigned char right_angle : 1;
+
+	char **prgm1_args;
+	unsigned int prgm1_numargs;
+	char **prgm2_args;
+	unsigned int prgm2_numargs;
+	char **prgm3_args;
+	unsigned int prgm3_numargs;
+
+	char *infile;
+	char *outfile;
+
+	unsigned int infile_index;
+	unsigned int outfile_index;
+
+	unsigned int pipe1_index;
+	unsigned int pipe2_index;
+
+	unsigned int left_angle_index;
+	unsigned int right_angle_index;
+
+} PipeData;
+
 int execute_command(char **, int);
 int is_builtin(const char *);
-void execute(char *path, char **args);
+void execute_nopipe(char *path, char **args);
 void pwd();
 void cd(int numargs, char **cmdtok);
+PipeData *pipe_parse_commands(char **argv, int argc);
+char *searchPATH(char *cmd);
 
 void finish();
 

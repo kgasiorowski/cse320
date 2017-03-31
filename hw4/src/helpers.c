@@ -116,11 +116,15 @@ char *searchPATH(char *cmd){
 
 void dispStringArr(char **argv){
 
+	/*
+
 	while(*argv != NULL){
 
-		debug("%s\n", *(argv++));
+		fprintf(stderr, "%s\n", *(argv++));
 
 	}
+
+	*/
 
 }
 

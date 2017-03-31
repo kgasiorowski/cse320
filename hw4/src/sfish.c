@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+
 int execute_command(char **cmdtok, int numargs){
 
 	//Nothing was passed in
@@ -68,6 +69,8 @@ int execute_command(char **cmdtok, int numargs){
 	//If not, search for and then execute it
 	}else{
 
+		//fprintf(stderr, "\n\nMEMES\n\n");
+
 		//Logic to determine piping
 		if(pipedata->numpipes == 0 && pipedata->left_angle == 0 && pipedata->right_angle == 0){
 
@@ -91,6 +94,7 @@ int execute_command(char **cmdtok, int numargs){
 			free(path_to_exec);
 
 		}else if(pipedata->numpipes == 0 && (pipedata->left_angle == 1 || pipedata->right_angle == 1)){
+			//REDIRECTION!!!
 
 			char *cmd = searchPATH(cmdtok[0]);
 
@@ -110,7 +114,7 @@ int execute_command(char **cmdtok, int numargs){
 			}else if(pid == 0){
 				//Child
 				int in = open(pipedata->infile, O_RDONLY);
-				int out = open(pipedata->outfile, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+				int out = open(pipedata->outfile, O_WRONLY | O_CREAT, S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP | O_TRUNC);
 
 				if(in != -1){
 
@@ -144,10 +148,9 @@ int execute_command(char **cmdtok, int numargs){
 
 
 		}else if(pipedata->numpipes == 1 && pipedata->left_angle == 0 && pipedata->right_angle == 0){
+			//ONE PIPE!!!
 
-			int fd[2];
-			pipe(fd);
-
+			//int status;
 			char *cmd1 = searchPATH(*(pipedata->prgm1_args));
 			char *cmd2 = searchPATH(*(pipedata->prgm2_args));
 
@@ -165,32 +168,202 @@ int execute_command(char **cmdtok, int numargs){
 
 			}
 
-			/*
+			int fd[2];
 
-			pid_t pid = fork();
+			if(pipe(fd) == -1){
 
-			if(pid < 0){
+				error("%s","Error in pipe\n");
+				fprintf(stderr, "Piping error\n");
+				return 1;
+
+			}
+
+			pid_t pid1 = fork();
+
+			if(pid1 < 0){
+
+				fprintf(stderr, "Error forking\n");
+				return 1;
+
+			}else if(pid1 == 0){
+
+				//Child
+				if(dup2(fd[1], 1) == -1){
+
+					fprintf(stderr, "Dup failed\n");
+					return 1;
+
+				}
+
+				execv(cmd1, pipedata->prgm1_args);
+
+				fprintf(stderr,"Error! Program could not execute\n");
+				exit(EXIT_FAILURE);
+
+			}
+			//Parent
+
+			pid_t pid2 = fork();
+
+			if(pid2 < 0){
 
 				error("%s","Error forking\n");
 				return 1;
 
-			}else if(pid == 0){
-				//Child
-				exit(0);
+			}else if(pid2 == 0){
 
-			}else{
-				//Parent
-				wait(&pid);
-				dup2(fd[0], 0);
+				//Second child
+				if(dup2(fd[0], 0) == -1){
 
+					fprintf(stderr, "Dup failed\n");
+					return 1;
 
+				}
+
+				execv(cmd2, pipedata->prgm2_args);
+
+				fprintf(stderr, "Error! Program could not execute\n");
+				exit(EXIT_FAILURE);
 
 			}
-			*/
+			wait(NULL);
+			//Parent
 
 		}else if(pipedata->numpipes == 2 && pipedata->left_angle == 0 && pipedata->right_angle == 0){
+			//TWO PIPES!
 
+			char *cmd1 = searchPATH(*(pipedata->prgm1_args));
+			char *cmd2 = searchPATH(*(pipedata->prgm2_args));
+			char *cmd3 = searchPATH(*(pipedata->prgm3_args));
 
+			if(cmd1 == NULL){
+
+				fprintf(stderr, "Command not found: %s\n", *(pipedata->prgm1_args));
+				return 1;
+
+			}
+
+			if(cmd2 == NULL){
+
+				fprintf(stderr, "Command not found %s\n", *(pipedata->prgm2_args));
+				return 1;
+
+			}
+
+			if(cmd3 == NULL){
+
+				fprintf(stderr, "Command not found %s\n", *(pipedata->prgm3_args));
+				return 1;
+
+			}
+
+			int fd1[2];
+			int fd2[2];
+			pipe(fd1);
+			pipe(fd2);
+
+			if(pipe(fd1) == -1){
+
+				error("%s","Error in pipe\n");
+				fprintf(stderr, "Piping error\n");
+				return 1;
+
+			}
+
+			if(pipe(fd2) == -1){
+
+				error("%s","Error in pipe\n");
+				fprintf(stderr, "Piping error\n");
+				return 1;
+
+			}
+
+			//Fork first process
+			pid_t pid;
+
+			pid = fork();
+
+			if(pid < 0){
+
+				fprintf(stderr, "Forking error\n");
+				return 1;
+
+			}else if(pid == 0){
+
+				if(dup2(fd1[1], 1)){
+
+					fprintf(stderr, "Dup 1 failed\n");
+					return 1;
+
+				}
+
+				execv(cmd1, pipedata->prgm1_args);
+
+				fprintf(stderr, "Error! Program could not execute\n");
+				exit(EXIT_FAILURE);
+
+			}
+
+			//Fork second process
+			pid = fork();
+
+			if(pid < 0){
+
+				fprintf(stderr, "Forking error\n");
+				return 1;
+
+			}else if(pid == 0){
+
+				if(dup2(fd1[0], 0)){
+
+					fprintf(stderr, "Dup 2 failed\n");
+					return 1;
+
+				}
+
+				if(dup2(fd2[1], 1)){
+
+					fprintf(stderr, "Dup 3 failed\n");
+					return 1;
+
+				}
+
+				execv(cmd2, pipedata->prgm2_args);
+
+				fprintf(stderr, "Error! Program could not execute\n");
+				exit(EXIT_FAILURE);
+
+			}
+
+			//Fork third process
+			pid = fork();
+
+			if(pid < 0){
+
+				fprintf(stderr, "Forking error\n");
+				return 1;
+
+			}else if(pid == 0){
+
+				if(dup2(fd2[0], 0)){
+
+					fprintf(stderr, "Dup 4 failed\n");
+					return 1;
+
+				}
+
+				execv(cmd3, pipedata->prgm3_args);
+
+				fprintf(stderr, "Error! Program could not execute\n");
+				exit(EXIT_FAILURE);
+
+			}
+
+			wait(NULL);
+
+		}else{
+
+			fprintf(stderr, "Error: Invalid commands\n");
 
 		}
 

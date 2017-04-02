@@ -61,7 +61,7 @@ void child_handler(int sig, siginfo_t *info, void *flags){
 		sio_puts("Child with pid: ");
 		sio_putl((long)pid);
 		sio_puts(" has died. It spent ");
-		sio_putl((long)((double)info->si_utime + (double)info->si_stime)/(sysconf(_SC_CLK_TCK)*1000.0));
+		sio_putl((long)((double)info->si_utime + (double)info->si_stime)/(sysconf(_SC_CLK_TCK)));
 		sio_puts(" seconds utilizing the cpu\n");
 
 	}

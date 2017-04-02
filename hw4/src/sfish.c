@@ -279,9 +279,8 @@ int execute_command(char **cmdtok, int numargs){
 
 			int fd1[2];
 			int fd2[2];
-			pipe(fd1);
-			pipe(fd2);
 
+			debug("%s","Piping first pipe...\n");
 			if(pipe(fd1) == -1){
 
 				error("%s","Error in pipe 1\n");
@@ -289,7 +288,9 @@ int execute_command(char **cmdtok, int numargs){
 				return 1;
 
 			}
+			debug("Pipe has file descriptors: %d %d\n", fd1[0], fd1[1]);
 
+			debug("%s", "Piping second pipe...\n");
 			if(pipe(fd2) == -1){
 
 				error("%s","Error in pipe 2\n");
@@ -297,12 +298,14 @@ int execute_command(char **cmdtok, int numargs){
 				return 1;
 
 			}
+			debug("Pipe has file descriptors: %d %d\n", fd2[0], fd2[1]);
 
 			//Fork first process
 			pid_t pid;
 			int status;
 			(void)status;
 
+			debug("%s\n","Forking first process...");
 			pid = fork();
 
 			if(pid < 0){
@@ -312,6 +315,7 @@ int execute_command(char **cmdtok, int numargs){
 
 			}else if(pid == 0){
 
+				debug("%s\n","Child 1: dup2");
 				if(dup2(fd1[1], 1) == -1){
 
 					fprintf(stderr, "Dup 1 failed\n");
@@ -319,15 +323,20 @@ int execute_command(char **cmdtok, int numargs){
 
 				}
 
+				debug("%s","Child 1: closing pipes\n");
 				close(fd1[0]);
 				close(fd1[1]);
 
+				debug("Child 1: executing %s\n", cmd1);
 				execv(cmd1, pipedata->prgm1_args);
 
 				fprintf(stderr, "Error! Program could not execute\n");
 				exit(EXIT_FAILURE);
 
 			}
+			debug("1st pid spawned: %d\n", pid);
+			wait(NULL);
+			debug("%s","Parent: forking second child\n");
 
 			//Fork second process
 			pid = fork();
@@ -358,13 +367,23 @@ int execute_command(char **cmdtok, int numargs){
 				close(fd2[0]);
 				close(fd2[1]);
 
+				debug("2nd child: executing %s\n", cmd2);
 				execv(cmd2, pipedata->prgm2_args);
 
 				fprintf(stderr, "Error! Program could not execute\n");
 				exit(EXIT_FAILURE);
 
+			}else{
+
+				close(fd1[0]);
+				close(fd1[1]);
+				//wait(NULL);
+
 			}
 
+			debug("2nd pid spawned: %d\n", pid);
+
+			debug("%s","Parent: forking third child\n");
 			//Fork third process
 			pid = fork();
 
@@ -390,7 +409,14 @@ int execute_command(char **cmdtok, int numargs){
 				fprintf(stderr, "Error! Program could not execute\n");
 				exit(EXIT_FAILURE);
 
+			}else{
+
+				close(fd2[0]);
+				close(fd2[1]);
+				//wait(NULL);
+
 			}
+			debug("3rd pid spawned: %d\n", pid);
 
 			fflush(stdout);
 			fflush(stderr);

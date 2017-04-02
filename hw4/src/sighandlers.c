@@ -52,7 +52,7 @@ ssize_t sio_putl(long v)
 }
 
 //Handles child signal
-void child_handler(int sig){
+void child_handler(int sig, siginfo_t *info, void *flags){
 
 	int saved_errno = errno;
 	pid_t pid;
@@ -61,7 +61,7 @@ void child_handler(int sig){
 		sio_puts("Child with pid: ");
 		sio_putl((long)pid);
 		sio_puts(" has died. It spent ");
-		sio_putl((long)0);
+		sio_putl((long)((double)info->si_utime + (double)info->si_stime)/(sysconf(_SC_CLK_TCK)*1000.0));
 		sio_puts(" seconds utilizing the cpu\n");
 
 	}
@@ -94,9 +94,9 @@ void setup_signals(){
 
 	// signal(SIGCHLD, child_handler);
 
-    sca.sa_handler = &child_handler;
+    sca.sa_sigaction = &child_handler;
     sigemptyset(&sca.sa_mask);
-    sca.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+    sca.sa_flags = SA_SIGINFO;
     if (sigaction(SIGCHLD, &sca, 0) == -1) {
       fprintf(stderr, "SIGCHILD handler could not be installed, aborting\n");
       exit(1);

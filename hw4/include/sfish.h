@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 #define PATH_BUFFER_SIZE 512
 #define NUM_ARGS 30
@@ -63,7 +64,9 @@ void pwd();
 void cd(int numargs, char **cmdtok);
 PipeData *pipe_parse_commands(char **argv, int argc);
 char *searchPATH(char *cmd);
-void dispStringArr(char **argv);
+void dispStringArr(char **argv, int);
+void my_alarm(unsigned int seconds);
+void setup_signals();
 
 void finish();
 

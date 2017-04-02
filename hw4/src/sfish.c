@@ -150,6 +150,9 @@ int execute_command(char **cmdtok, int numargs){
 				exit(EXIT_FAILURE);
 
 			}
+
+			fflush(stdout);
+			fflush(stderr);
 			//Parent
 			//waitpid(pid, 0, 0);
 
@@ -239,6 +242,10 @@ int execute_command(char **cmdtok, int numargs){
 				exit(EXIT_FAILURE);
 
 			}
+
+			fflush(stdout);
+			fflush(stderr);
+
 			//Parent
 			//wait(NULL);
 
@@ -384,6 +391,9 @@ int execute_command(char **cmdtok, int numargs){
 				exit(EXIT_FAILURE);
 
 			}
+
+			fflush(stdout);
+			fflush(stderr);
 
 		}else{
 

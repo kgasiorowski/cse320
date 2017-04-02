@@ -19,10 +19,8 @@ void execute_nopipe(char *path, char **args){
 		error("Something went wrong with executing %s\n", path);
 		exit(EXIT_FAILURE);
 
-	}else{
-		//Parent
-		wait(NULL);
-
 	}
+	//Parent
+	//waitpid(pid, NULL, 0);
 
 }

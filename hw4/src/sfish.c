@@ -1,7 +1,5 @@
 #include "sfish.h"
 #include "debug.h"
-#include <stdio.h>
-#include <fcntl.h>
 
 
 int execute_command(char **cmdtok, int numargs){
@@ -55,8 +53,17 @@ int execute_command(char **cmdtok, int numargs){
 
 		}else if(strcmp(cmdtok[0], "pwd") == 0){
 
-			pwd();
+			pwd(pipedata);
 			printf("\n");
+
+		}else if(strcmp(cmdtok[0], "alarm") == 0){
+
+			if(numargs > 1){
+
+				unsigned int seconds = atoi(cmdtok[1]);
+				my_alarm(seconds);
+
+			}
 
 		}else{
 
@@ -90,6 +97,8 @@ int execute_command(char **cmdtok, int numargs){
 				execute_nopipe(path_to_exec, cmdtok);
 
 			}
+
+			//wait(NULL);
 
 			free(path_to_exec);
 
@@ -133,18 +142,16 @@ int execute_command(char **cmdtok, int numargs){
 				}
 
 				debug("%s","Child executing with arguments:\n");
-				dispStringArr(pipedata->prgm1_args);
+				dispStringArr(pipedata->prgm1_args, pipedata->prgm1_numargs);
 
 				execv(cmd, pipedata->prgm1_args); //Should never return
 
 				error("%s","Error! Program could not execute\n");
 				exit(EXIT_FAILURE);
 
-			}else{
-				//Parent
-				wait(NULL);
-
 			}
+			//Parent
+			//waitpid(pid, 0, 0);
 
 
 		}else if(pipedata->numpipes == 1 && pipedata->left_angle == 0 && pipedata->right_angle == 0){
@@ -195,6 +202,9 @@ int execute_command(char **cmdtok, int numargs){
 
 				}
 
+				close(fd[0]);
+				close(fd[1]);
+
 				execv(cmd1, pipedata->prgm1_args);
 
 				fprintf(stderr,"Error! Program could not execute\n");
@@ -220,14 +230,17 @@ int execute_command(char **cmdtok, int numargs){
 
 				}
 
+				close(fd[0]);
+				close(fd[1]);
+
 				execv(cmd2, pipedata->prgm2_args);
 
 				fprintf(stderr, "Error! Program could not execute\n");
 				exit(EXIT_FAILURE);
 
 			}
-			wait(NULL);
 			//Parent
+			//wait(NULL);
 
 		}else if(pipedata->numpipes == 2 && pipedata->left_angle == 0 && pipedata->right_angle == 0){
 			//TWO PIPES!
@@ -264,22 +277,24 @@ int execute_command(char **cmdtok, int numargs){
 
 			if(pipe(fd1) == -1){
 
-				error("%s","Error in pipe\n");
-				fprintf(stderr, "Piping error\n");
+				error("%s","Error in pipe 1\n");
+				fprintf(stderr, "Piping error 1\n");
 				return 1;
 
 			}
 
 			if(pipe(fd2) == -1){
 
-				error("%s","Error in pipe\n");
-				fprintf(stderr, "Piping error\n");
+				error("%s","Error in pipe 2\n");
+				fprintf(stderr, "Piping error 2\n");
 				return 1;
 
 			}
 
 			//Fork first process
 			pid_t pid;
+			int status;
+			(void)status;
 
 			pid = fork();
 
@@ -290,12 +305,15 @@ int execute_command(char **cmdtok, int numargs){
 
 			}else if(pid == 0){
 
-				if(dup2(fd1[1], 1)){
+				if(dup2(fd1[1], 1) == -1){
 
 					fprintf(stderr, "Dup 1 failed\n");
 					return 1;
 
 				}
+
+				close(fd1[0]);
+				close(fd1[1]);
 
 				execv(cmd1, pipedata->prgm1_args);
 
@@ -314,19 +332,24 @@ int execute_command(char **cmdtok, int numargs){
 
 			}else if(pid == 0){
 
-				if(dup2(fd1[0], 0)){
+				if(dup2(fd1[0], 0) == -1){
 
 					fprintf(stderr, "Dup 2 failed\n");
 					return 1;
 
 				}
 
-				if(dup2(fd2[1], 1)){
+				if(dup2(fd2[1], 1) == -1){
 
 					fprintf(stderr, "Dup 3 failed\n");
 					return 1;
 
 				}
+
+				close(fd1[0]);
+				close(fd1[1]);
+				close(fd2[0]);
+				close(fd2[1]);
 
 				execv(cmd2, pipedata->prgm2_args);
 
@@ -345,12 +368,15 @@ int execute_command(char **cmdtok, int numargs){
 
 			}else if(pid == 0){
 
-				if(dup2(fd2[0], 0)){
+				if(dup2(fd2[0], 0) == -1){
 
 					fprintf(stderr, "Dup 4 failed\n");
 					return 1;
 
 				}
+
+				close(fd2[0]);
+				close(fd2[1]);
 
 				execv(cmd3, pipedata->prgm3_args);
 
@@ -358,8 +384,6 @@ int execute_command(char **cmdtok, int numargs){
 				exit(EXIT_FAILURE);
 
 			}
-
-			wait(NULL);
 
 		}else{
 

@@ -11,6 +11,8 @@ int main(int argc, char const *argv[], char* envp[]){
     rl_catch_signals = 0;
     /* This is disable readline's default signal handlers, since you are going to install your own.*/
 
+    setup_signals();
+
     const char *cmd;
 
     char *command_prompt = (char*)malloc(sizeof(char)*PATH_BUFFER_SIZE);

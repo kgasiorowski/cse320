@@ -56,7 +56,7 @@ char *searchPATH(char *cmd){
 
 		while(*paths != NULL){
 
-			debug("Path scanned: %s\n", *paths);
+			//debug("Path scanned: %s\n", *paths);
 			*(++paths) = strtok(NULL, ":");
 
 		}
@@ -75,14 +75,14 @@ char *searchPATH(char *cmd){
 			strcat(path, cmd);
 			strcat(path, "\0");
 
-			debug("Created path: %s. Checking...\n", path);
+			//debug("Created path: %s. Checking...\n", path);
 
 			if(stat(path, fs) == -1){
 
 				if(errno == ENOENT){
 
 					//File does not exist
-					debug("File not found at path: %s\n", path);
+					//debug("File not found at path: %s\n", path);
 					free(path);
 					path = NULL;
 					paths++;
@@ -114,17 +114,10 @@ char *searchPATH(char *cmd){
 
 }
 
-void dispStringArr(char **argv){
+void dispStringArr(char **argv, int argc){
 
-	/*
-
-	while(*argv != NULL){
-
-		fprintf(stderr, "%s\n", *(argv++));
-
-	}
-
-	*/
+	for(int i = 0; i < argc; i++)
+		debug("%s\n", argv[i]);
 
 }
 
@@ -250,7 +243,7 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 		pipe_bits->prgm1_args[pipe_bits->pipe1_index] = NULL;
 
 		debug("Number of arguments in prgm 1: %d\n", pipe_bits->prgm1_numargs);
-		dispStringArr(pipe_bits->prgm1_args);
+		dispStringArr(pipe_bits->prgm1_args, pipe_bits->prgm1_numargs);
 
 		//Check if there's a second pipe
 		if(pipe_bits->pipe2_index != -1){
@@ -267,7 +260,7 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 			pipe_bits->prgm2_numargs = pipe_bits->pipe2_index - pipe_bits->prgm1_numargs - 1;
 
 			debug("Number of arguments in prgm 2: %d\n", pipe_bits->prgm2_numargs);
-			dispStringArr(pipe_bits->prgm2_args);
+			dispStringArr(pipe_bits->prgm2_args, pipe_bits->prgm2_numargs);
 
 			for(int i = pipe_bits->pipe2_index+1; i < argc; i++){
 
@@ -278,7 +271,7 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 			pipe_bits->prgm3_numargs = argc - pipe_bits->pipe2_index - 1;
 
 			debug("Number of arguments in prgm 3: %d\n", pipe_bits->prgm3_numargs);
-			dispStringArr(pipe_bits->prgm3_args);
+			dispStringArr(pipe_bits->prgm3_args, pipe_bits->prgm3_numargs);
 
 		}else{
 
@@ -292,7 +285,7 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 			pipe_bits->prgm2_numargs = argc - pipe_bits->prgm1_numargs - 1;
 
 			debug("Number of arguments in prgm 2: %d\n", pipe_bits->prgm2_numargs);
-			dispStringArr(pipe_bits->prgm2_args);
+			dispStringArr(pipe_bits->prgm2_args, pipe_bits->prgm2_numargs);
 
 		}
 
@@ -317,7 +310,7 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 		pipe_bits->prgm1_numargs = index_to_loop_until;
 
 		debug("Number of arguments in prgm 2: %d\n", pipe_bits->prgm1_numargs);
-		dispStringArr(pipe_bits->prgm1_args);
+		dispStringArr(pipe_bits->prgm1_args, pipe_bits->prgm1_numargs);
 
 	}
 
@@ -325,34 +318,10 @@ PipeData *pipe_parse_commands(char **argv, int argc){
 
 }
 
-void pwd(){
-
-	debug("%s\n", "pwd was entered");
-
-	pid_t pid = fork();
-
-	if(pid < 0){
-
-		error("%s","Fork failed in PWD\n");
-
-	}else if(pid == 0){
-
-		//Child
-		fprintf(stdout, "%s", getcwd(NULL, 0));
-		exit(EXIT_SUCCESS);
-
-	}else{
-		//Parent
-		wait(NULL);
-
-	}
-
-}
-
 //Return true if the command is a builtin, false otherwise
 int is_builtin(const char *command){
 
-	return !strcmp(command, "help") || !strcmp(command, "exit") || !strcmp(command, "cd") || !strcmp(command, "pwd");
+	return !strcmp(command, "help") || !strcmp(command, "exit") || !strcmp(command, "cd") || !strcmp(command, "pwd") || !strcmp(command, "alarm");
 
 }
 

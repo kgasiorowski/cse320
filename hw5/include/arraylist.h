@@ -6,6 +6,8 @@
 #include <limits.h>
 #include "const.h"
 
+#define SHORT_ADDR(V) ((void*)(((unsigned long)V<<48)>>48))
+
 /*
     _  _____ _____ _   _     ____  _     _____    ____  _____    _    ____
    / \|_   _|_   _| \ | |   |  _ \| |   |__  /   |  _ \| ____|  / \  |  _ \

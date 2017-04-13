@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include "arraylist.h"
 #include "debug.h"
+#include <errno.h>
+
 
 // Test(al_suite, 3_removal, .timeout=2, .init=setup, .fini=teardown){
 
@@ -36,20 +38,44 @@ typedef struct{
  *              HELPER FUNCS              *
  ******************************************/
 void test_item_t_free_func(void *argptr){
+
     test_item_t* ptr = (test_item_t*) argptr;
+
     if(!ptr)
         free(ptr->some_data);
     else
-        cr_log_warn("Pointer was NULL\n");
+        warn("%s","Item was NULL\n");
+
+}
+
+student_t *gen_student(char *name){
+
+    student_t *ret = malloc(sizeof(student_t));
+    ret->name = malloc(sizeof(char) * 100);
+    strcpy(ret->name, name);
+
+    return ret;
+
+}
+
+void student_t_free_func(void *argptr){
+
+    student_t *stu = (student_t*)argptr;
+
+    if(!stu->name)
+        free(stu->name);
+    else
+        warn("%s", "Student's name was NULL\n");
+
 }
 
 void setup(void) {
-    cr_log_warn("Setting up test");
+    info("%s","Setting up test");
     global_list = new_al(sizeof(test_item_t));
 }
 
 void teardown(void) {
-    cr_log_warn("Tearing down");
+    info("%s","Tearing down");
     delete_al(global_list, test_item_t_free_func);
 }
 
@@ -69,7 +95,29 @@ Test(al_suite, 1_deletion, .timeout=2){
 
     delete_al(locallist, test_item_t_free_func);
 
-    cr_log_warn("Delete completed without crashing");
+    info("%s\n","Delete completed without crashing");
+}
+
+Test(al_suite, 1_1_deletion, .timeout=2){
+
+    student_t *stu = NULL;
+    (void)stu;
+    arraylist_t *list = NULL;
+    (void)list;
+
+    list = new_al(sizeof(student_t));
+
+    stu = gen_student("Amanda");
+    insert_al(list, stu);
+
+    stu = gen_student("Kuba");
+    insert_al(list, stu);
+
+    // stu = gen_student("Maya");
+    // insert_al(list, stu);
+
+    //delete_al(list, student_t_free_func);
+
 }
 
 Test(al_suite, 2_insertion, .timeout=2){
@@ -84,7 +132,7 @@ Test(al_suite, 2_insertion, .timeout=2){
 
     insert_al(list, test);
 
-    cr_log_warn("Inserting completed without crashing");
+    info("%s\n","Inserting completed without crashing");
     cr_assert(list->length == 1, "Insert didn't increment length");
 
 }
@@ -153,6 +201,8 @@ Test(al_suite, 4_getdata, .timeout=2){
 
     int *temp1 = calloc(1, sizeof(int));
     int *temp2 = calloc(1, sizeof(int));
+    int *ret;
+
     *temp1 = 320;
     *temp2 = 321;
 
@@ -163,7 +213,7 @@ Test(al_suite, 4_getdata, .timeout=2){
     insert_al(list, temp1);
 
     *temp1 = 320;
-    int *ret = get_data_al(list, temp1);
+    ret = get_data_al(list, temp1);
     cr_assert(*ret == 320, "Unexpected return value: %d\n", *ret);
 
     *temp1 = 500;
@@ -174,9 +224,29 @@ Test(al_suite, 4_getdata, .timeout=2){
     ret = get_data_al(list, temp1);
     cr_assert(*ret == 420, "Unexpected return value: %d\n", *ret);
 
-
     ret = get_data_al(list, temp2);
     cr_assert(ret == NULL, "Unexpected return value: %d\n", *ret);
 
+    ret = get_index_al(list, 0);
+    cr_assert(*ret == 320, "Unexpected return value: %d\n", *ret);
+
+    ret = get_index_al(list, 1);
+    cr_assert(*ret == 420, "Unexpected return value: %d\n", *ret);
+
+    ret = get_index_al(list, 2);
+    cr_assert(*ret == 500, "Unexpected return value: %d\n", *ret);
+
+    ret = get_index_al(list, -1);
+    cr_assert(ret == NULL && errno == EINVAL, "Unexpected return value, should return NULL");
+
+    ret = get_index_al(list, 3);
+    cr_assert(ret == NULL && errno == EINVAL, "Unexpected return value, should return NULL");
+
+    ret = get_index_al(list, 1000);
+    cr_assert(ret == NULL && errno == EINVAL, "Unexpected return value, should return NULL");
+
+    free(ret);
+    free(temp1);
+    free(temp2);
 
 }

@@ -1,18 +1,66 @@
 #include "arraylist.h"
+#include "debug.h"
 #include <errno.h>
+#include <stdio.h>
 
 /**
  * @visibility HIDDEN FROM USER
  * @return     true on success, false on failure
  */
 static bool resize_al(arraylist_t* self){
+
+
+    debug("%s","Entered resize\n");
     bool ret = false;
+
+    if(self == NULL){
+
+        error("%s", "Error: resize entered with null value\n");
+        return false;
+
+    }
+
+    debug("List capacity: %lu, List length: %lu\n", self->capacity, self->length);
+
+    if(self->length == self->capacity){
+
+        //
+
+    }else if(self->length == (self->capacity/2)-1){
+
+        //
+
+    }
 
     return ret;
 }
 
 arraylist_t *new_al(size_t item_size){
-    void *ret = NULL;
+
+    arraylist_t *ret = NULL;
+    ret = calloc(1, sizeof(arraylist_t));
+
+    if(ret == NULL)
+    {
+
+        fprintf(stderr, "Error: out of memory\n");
+        errno = ENOMEM;
+        return NULL;
+
+    }
+
+    ret->capacity =     INIT_SZ;
+    ret->length =       0;
+    ret->item_size =    item_size;
+    ret->base =         calloc(INIT_SZ, item_size);
+
+    if(ret->base == NULL){
+
+        fprintf(stderr, "Error: out of memory\n");
+        errno = ENOMEM;
+        return NULL;
+
+    }
 
     return ret;
 }
@@ -52,6 +100,9 @@ void *remove_index_al(arraylist_t *self, size_t index){
 }
 
 void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
+
+    free_item_func(self);
+    free(self);
 
     return;
 }

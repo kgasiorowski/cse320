@@ -42,7 +42,7 @@ void setup(void) {
 }
 
 void teardown(void) {
-    cr_log_error("Tearing down");
+    cr_log_warn("Tearing down");
     delete_al(global_list, test_item_t_free_func);
 }
 

@@ -2,6 +2,8 @@
 #include "debug.h"
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /**
  * @visibility HIDDEN FROM USER
@@ -15,7 +17,7 @@ static bool resize_al(arraylist_t* self){
 
     if(self == NULL){
 
-        error("%s", "Error: resize entered with null value\n");
+        error("%s", "Resize entered with null value\n");
         return false;
 
     }
@@ -24,11 +26,31 @@ static bool resize_al(arraylist_t* self){
 
     if(self->length == self->capacity){
 
-        //
+        //Grow!
+        void *retval = realloc(self->base, self->capacity*2);
+        if(retval == NULL){
+
+            error("Could not grow list of size %lu to size %lu\n", self->capacity, self->capacity*2);
+            return false;
+
+        }
+
+        self->capacity *= 2;
+        ret = true;
 
     }else if(self->length == (self->capacity/2)-1){
 
-        //
+        //Shrink!
+        void *retval = realloc(self->base, self->capacity/2);
+        if(retval == NULL){
+
+            error("Could not shrink list of size %lu to size %lu\n", self->capacity, self->capacity/2);
+            return false;
+
+        }
+
+        self->capacity /= 2;
+        ret = true;
 
     }
 
@@ -68,9 +90,21 @@ arraylist_t *new_al(size_t item_size){
 size_t insert_al(arraylist_t *self, void* data){
     size_t ret = UINT_MAX;
 
+    if(self == NULL || data == NULL)
+        return ret;
+
     resize_al(self);
 
-    return ret;
+    size_t itemsize = self->item_size;
+    size_t offset = itemsize*(self->length);
+
+    void *new_index_location = (char*)self->base + offset;
+
+    memcpy(new_index_location, data, self->item_size);
+
+    self->length++;
+
+    return self->length;
 }
 
 void *get_data_al(arraylist_t *self, void *data){

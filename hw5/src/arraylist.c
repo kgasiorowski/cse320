@@ -1,4 +1,4 @@
-#include "arraylist.h"
+ #include "arraylist.h"
 #include "debug.h"
 #include <errno.h>
 #include <stdio.h>
@@ -19,16 +19,18 @@ static bool resize_al(arraylist_t* self){
         errno = EINVAL;
         return false;
 
-    }
+    }else
 
-    debug("List capacity: %lu, List length: %lu\n", self->capacity, self->length);
+    //debug("List capacity: %lu, List length: %lu\n", self->capacity, self->length);
 
     if(self->length == self->capacity){
 
         //Grow!
-        debug("Attempting to grow list to size %lu\n", self->capacity*2);
+        //debug("Attempting to grow list to size %lu\n", self->capacity*2);
 
-        void *retval = realloc(self->base, self->capacity*2);
+        debug("Realloc size: %lu\n", (self->capacity*2)*self->item_size);
+
+        void *retval = realloc(self->base, (self->capacity*2)*self->item_size);
         if(retval == NULL){
 
             error("Could not grow list of size %lu to size %lu\n", self->capacity, self->capacity*2);
@@ -39,12 +41,14 @@ static bool resize_al(arraylist_t* self){
         self->capacity *= 2;
         ret = true;
 
-    }else if(self->length <= (self->capacity/2)-1){
+    }else if(self->length == (self->capacity/2)-1){
 
         //Shrink!
-        debug("Attempting to shrink list to size %lu\n", self->capacity/2);
+        //debug("Attempting to shrink list to size %lu\n", self->capacity/2);
 
-        void *retval = realloc(self->base, self->capacity/2);
+        debug("Realloc size: %lu\n", (self->capacity*2)*self->item_size);
+
+        void *retval = realloc(self->base, (self->capacity/2)*self->item_size);
         if(retval == NULL){
 
             error("Could not shrink list of size %lu to size %lu\n", self->capacity, self->capacity/2);
@@ -57,7 +61,7 @@ static bool resize_al(arraylist_t* self){
 
     }
 
-    debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
+    //debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
 
     return ret;
 }
@@ -97,7 +101,8 @@ arraylist_t *new_al(size_t item_size){
 
     }
 
-    debug("Arraylist stuff: %p %p\n", SHORT_ADDR(ret), SHORT_ADDR(ret->base));
+    debug("New arraylist location: %p\n", SHORT_ADDR(ret));
+    debug("New base array location: %p\n", SHORT_ADDR(ret->base));
 
     return ret;
 }
@@ -122,6 +127,8 @@ size_t insert_al(arraylist_t *self, void* data){
 
     //Calculate the new offset to write to and copy the data
     void *new_index_location = (char*)self->base + offset;
+
+    debug("Location of new item: %p\n", SHORT_ADDR(new_index_location));
     memcpy(new_index_location, data, self->item_size);
 
     //Increase the length of the list since we are inserting
@@ -154,6 +161,7 @@ void *get_data_al(arraylist_t *self, void *data){
         //A match was found
         debug("Get data found at match at index: %d\n", index);
         void *memlocation = (char*)baseaddr+(itemsize*index);
+        debug("Calculated location of item: %p\n", SHORT_ADDR(memlocation));
 
         //Create a copy of this item
         ret = calloc(1, itemsize);
@@ -212,6 +220,8 @@ void *remove_data_al(arraylist_t *self, void *data){
 void *remove_index_al(arraylist_t *self, size_t index){
     void *ret = 0;
 
+
+
     resize_al(self);
 
     return ret;
@@ -220,17 +230,20 @@ void *remove_index_al(arraylist_t *self, size_t index){
 /*****************************************************/
 void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
 
-
-    if(!free_item_func){
+    if(free_item_func == NULL){
         //The free function isn't null
 
         void *baseaddr = self->base;
         size_t itemsize = self->item_size;
 
+        debug("Address of this list: %p\n", SHORT_ADDR(self));
+        debug("Base address of this list: %p\n", SHORT_ADDR(baseaddr));
+
         for(int i = 0; i < self->length; i++){
 
             //Calculate each item location
             void *itemaddr = (char*)baseaddr + (itemsize * i);
+            debug("Address of this item: %p\n", SHORT_ADDR(itemaddr));
             //Call the custom free function on each item
             free_item_func(itemaddr);
 

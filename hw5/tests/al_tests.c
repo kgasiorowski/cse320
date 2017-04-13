@@ -89,34 +89,22 @@ Test(al_suite, 0_creation, .timeout=2){
 }
 
 Test(al_suite, 1_deletion, .timeout=2){
-    arraylist_t *locallist = new_al(sizeof(test_item_t));
 
-    cr_assert_not_null(locallist, "List returned was NULL");
+    arraylist_t *list = new_al(sizeof(test_item_t));
 
-    delete_al(locallist, test_item_t_free_func);
+
+
+    cr_assert_not_null(list, "List returned was NULL");
+
+    delete_al(list, test_item_t_free_func);
 
     info("%s\n","Delete completed without crashing");
+
 }
 
 Test(al_suite, 1_1_deletion, .timeout=2){
 
-    // student_t *stu = NULL;
-    // (void)stu;
-    // arraylist_t *list = NULL;
-    // (void)list;
 
-    // list = new_al(sizeof(student_t));
-
-    // stu = gen_student("Amanda");
-    // insert_al(list, stu);
-
-    // stu = gen_student("Kuba");
-    // insert_al(list, stu);
-
-    // stu = gen_student("Maya");
-    // insert_al(list, stu);
-
-    //delete_al(list, student_t_free_func);
 
 }
 
@@ -152,7 +140,7 @@ Test(al_suite, 2_1_insertion, .timeout=2){
     ret = insert_al(list, &test[0]);
 
     cr_assert(list->length == 1, "Unexpected length: %lu\n", list->length);
-    cr_assert(list->capacity == 2, "Unexpected capacity: %lu\n", list->capacity);
+    cr_assert(list->capacity == 4, "Unexpected capacity: %lu\n", list->capacity);
     cr_assert(ret == 0, "Unexpected index returned: %d\n", ret);
 
     //
@@ -246,6 +234,8 @@ Test(al_suite, 4_getdata, .timeout=2){
 
     ret = get_index_al(list, 1000);
     cr_assert(ret == NULL && errno == EINVAL, "Unexpected return value, should return NULL");
+
+    delete_al(list, NULL);
 
     free(ret);
     free(temp1);

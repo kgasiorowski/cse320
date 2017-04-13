@@ -62,7 +62,7 @@ void student_t_free_func(void *argptr){
 
     student_t *stu = (student_t*)argptr;
 
-    if(!stu->name)
+    if(!stu->name && !stu)
         free(stu->name);
     else
         warn("%s", "Student's name was NULL\n");
@@ -100,18 +100,18 @@ Test(al_suite, 1_deletion, .timeout=2){
 
 Test(al_suite, 1_1_deletion, .timeout=2){
 
-    student_t *stu = NULL;
-    (void)stu;
-    arraylist_t *list = NULL;
-    (void)list;
+    // student_t *stu = NULL;
+    // (void)stu;
+    // arraylist_t *list = NULL;
+    // (void)list;
 
-    list = new_al(sizeof(student_t));
+    // list = new_al(sizeof(student_t));
 
-    stu = gen_student("Amanda");
-    insert_al(list, stu);
+    // stu = gen_student("Amanda");
+    // insert_al(list, stu);
 
-    stu = gen_student("Kuba");
-    insert_al(list, stu);
+    // stu = gen_student("Kuba");
+    // insert_al(list, stu);
 
     // stu = gen_student("Maya");
     // insert_al(list, stu);
@@ -186,6 +186,8 @@ Test(al_suite, 2_1_insertion, .timeout=2){
     cr_assert(list->length == 5, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 8, "Unexpected capacity: %lu\n", list->capacity);
     cr_assert(ret == 4, "Unexpected index returned: %d\n", ret);
+
+    delete_al(list, NULL);
 
 }
 

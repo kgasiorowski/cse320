@@ -11,8 +11,6 @@
  */
 static bool resize_al(arraylist_t* self){
 
-
-    debug("%s","Entered resize\n");
     bool ret = false;
 
     if(self == NULL){
@@ -27,6 +25,8 @@ static bool resize_al(arraylist_t* self){
     if(self->length == self->capacity){
 
         //Grow!
+        debug("Attempting to grow list to size %lu\n", self->capacity*2);
+
         void *retval = realloc(self->base, self->capacity*2);
         if(retval == NULL){
 
@@ -38,9 +38,11 @@ static bool resize_al(arraylist_t* self){
         self->capacity *= 2;
         ret = true;
 
-    }else if(self->length == (self->capacity/2)-1){
+    }else if(self->length <= (self->capacity/2)-1){
 
         //Shrink!
+        debug("Attempting to shrink list to size %lu\n", self->capacity/2);
+
         void *retval = realloc(self->base, self->capacity/2);
         if(retval == NULL){
 
@@ -54,10 +56,17 @@ static bool resize_al(arraylist_t* self){
 
     }
 
+    debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
+
     return ret;
 }
 
 arraylist_t *new_al(size_t item_size){
+
+    if(item_size == 0){
+        errno = EINVAL;
+        return NULL;
+    }
 
     arraylist_t *ret = NULL;
     ret = calloc(1, sizeof(arraylist_t));
@@ -65,7 +74,7 @@ arraylist_t *new_al(size_t item_size){
     if(ret == NULL)
     {
 
-        fprintf(stderr, "Error: out of memory\n");
+        error("%s","Out of memory\n");
         errno = ENOMEM;
         return NULL;
 
@@ -78,7 +87,7 @@ arraylist_t *new_al(size_t item_size){
 
     if(ret->base == NULL){
 
-        fprintf(stderr, "Error: out of memory\n");
+        error("%s","Out of memory\n");
         errno = ENOMEM;
         return NULL;
 
@@ -90,13 +99,23 @@ arraylist_t *new_al(size_t item_size){
 size_t insert_al(arraylist_t *self, void* data){
     size_t ret = UINT_MAX;
 
-    if(self == NULL || data == NULL)
+    if(self == NULL || data == NULL){
+        errno = EINVAL;
         return ret;
+    }
+
+    debug("%s\n","Entered insert");
+
+    if(self == NULL || data == NULL){
+        errno = EINVAL;
+        return ret;
+    }
 
     resize_al(self);
 
-    size_t itemsize = self->item_size;
-    size_t offset = itemsize*(self->length);
+    size_t offset = (self->item_size)*(self->length);
+
+    debug("Offset calculated from index %lu and size %lu: %lu\n", self->length, self->item_size, offset);
 
     void *new_index_location = (char*)self->base + offset;
 
@@ -104,18 +123,49 @@ size_t insert_al(arraylist_t *self, void* data){
 
     self->length++;
 
-    return self->length;
+    debug("New list length: %lu, index returned: %d\n", self->length, (int)(self->length-1));
+
+    return self->length-1;
 }
 
 void *get_data_al(arraylist_t *self, void *data){
     void *ret = NULL;
 
+    if(self == NULL || data == NULL){
+        errno = EINVAL;
+        return ret;
+    }
+
+    size_t itemsize = self->item_size;
+    void *baseaddr = self->base;
+
+    int index = -1;
+
+    while(memcmp((char*)baseaddr+(itemsize*++index), data, itemsize) != 0 && index < self->length);
+
+    if(index < self->length){
+
+        debug("Get data found at match at index: %d\n", index);
+        ret = (char*)baseaddr+(itemsize*index);
+
+    }else{
+
+        debug("%s","No match found\n");
+        ret = NULL;
+
+    }
+
     return ret;
 }
 void *get_index_al(arraylist_t *self, size_t index){
-    void *ret = NULL;
 
-    return ret;
+    if(self == NULL || index >= self->length){
+        errno = EINVAL;
+        return NULL;
+    }
+
+    return (char*)self->base + (self->item_size * index);
+
 }
 
 void *remove_data_al(arraylist_t *self, void *data){

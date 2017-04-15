@@ -192,8 +192,8 @@ void *get_index_al(arraylist_t *self, size_t index){
         return NULL;
     }
 
-    void *ret = calloc(1, self->item_size);
-
+    void *ret = malloc(self->item_size);
+    debug("Return address: %p\n", SHORT_ADDR(ret));
     if(ret == NULL){
 
         error("%s","Copy could not be created\n");
@@ -201,7 +201,23 @@ void *get_index_al(arraylist_t *self, size_t index){
 
     }
 
-    memcpy(ret, (char*)self->base + (self->item_size * index), self->item_size);
+    memset(ret, 0, self->item_size);
+
+    //Values
+    void *baseaddr = self->base;
+    size_t itemsize = self->item_size;
+
+    debug("Base address: %p\n", SHORT_ADDR(baseaddr));
+    debug("Item size: %lu\n", itemsize);
+
+    void *itemloc = (char*)baseaddr + (itemsize*index);
+
+    debug("Final item location: %p\n", SHORT_ADDR(itemloc));
+
+    memcpy(ret, itemloc, itemsize);
+
+    debug("%s\n", "Completed memory copy");
+    debug("Returning address: %p\n", SHORT_ADDR(ret));
 
     return ret;
 

@@ -11,8 +11,6 @@
  */
 static bool resize_al(arraylist_t* self){
 
-    bool ret = false;
-
     if(self == NULL){
 
         error("%s", "Resize entered with null value\n");
@@ -21,49 +19,45 @@ static bool resize_al(arraylist_t* self){
 
     }else
 
+    debug("List: %p\n", SHORT_ADDR(self));
     debug("List capacity: %lu, List length: %lu\n", self->capacity, self->length);
+    debug("Current total list size: %lu\n", self->capacity * self->item_size);
 
     if(self->length == self->capacity){
 
         //Grow!
-        debug("Attempting to grow list to size %lu\n", self->capacity*2);
+        debug("Attempting to grow to capacity: %lu, size: %lu\n", self->capacity*2, (self->capacity)*2*(self->item_size));
+        void *new_base = calloc(self->capacity*2, self->item_size);
+        void *old_base = self->base;
 
-        debug("Realloc size: %lu\n", (self->capacity*2)*self->item_size);
+        if(new_base == NULL){
 
-        void *retval = realloc(self->base, (self->capacity*2)*self->item_size);
-        if(retval == NULL){
-
-            error("Could not grow list of size %lu to size %lu\n", self->capacity, self->capacity*2);
+            error("List %p cannot be resized", SHORT_ADDR(self));
             return false;
 
         }
 
-        self->capacity *= 2;
-        ret = true;
+        memmove(new_base, old_base, self->length * self->item_size);
 
-    }else if(self->length == (self->capacity/2)-1){
+        free(old_base);
+        self->base = new_base;
+        self->capacity *= 2;
+
+        debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
+
+        return true;
+
+
+    }else if(self->length == (self->capacity/2)-1 && (self->capacity/2) > INIT_SZ){
 
         //Shrink!
-        debug("Attempting to shrink list to size %lu\n", self->capacity/2);
-
-        debug("Realloc size: %lu\n", (self->capacity*2)*self->item_size);
-
-        void *retval = realloc(self->base, (self->capacity/2)*self->item_size);
-        if(retval == NULL){
-
-            error("Could not shrink list of size %lu to size %lu\n", self->capacity, self->capacity/2);
-            return false;
-
-        }
-
-        self->capacity /= 2;
-        ret = true;
+        debug("Attempting to shrink to capacity: %lu\n", self->capacity/2);
+        return false;
 
     }
 
-    debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
+    return true;
 
-    return ret;
 }
 
 /*****************************************************/
@@ -71,6 +65,7 @@ arraylist_t *new_al(size_t item_size){
 
     debug("Entered new_al with size: %lu\n", item_size);
     debug("Initial size: %d\n", INIT_SZ);
+    debug("Current total list size: %lu\n", item_size * INIT_SZ);
 
     //Base case checks
     if(item_size <= 0){
@@ -123,7 +118,14 @@ size_t insert_al(arraylist_t *self, void* data){
     }
 
     //Since the size is changing, resize the list as needed
-    resize_al(self);
+    if(!resize_al(self)){
+
+        error("%s","Resize failed\n");
+        return -1;
+
+    }
+
+    debug("Base address after resize: %p\n", SHORT_ADDR(self->base));
 
     size_t offset = (self->item_size)*(self->length);
     debug("Offset calculated from index %lu and size %lu: %lu\n", self->length, self->item_size, offset);
@@ -144,12 +146,19 @@ size_t insert_al(arraylist_t *self, void* data){
 
 
 size_t get_data_al(arraylist_t *self, void *data){
-    size_t ret = 0;
+    size_t ret = UINT_MAX;
 
     //Base case checks
-    if(self == NULL || data == NULL){
+    if(self == NULL){
         errno = EINVAL;
         return ret;
+    }
+
+    if(data == NULL){
+
+        ret = 0;
+        return ret;
+
     }
 
     size_t itemsize =   self->item_size;
@@ -162,26 +171,13 @@ size_t get_data_al(arraylist_t *self, void *data){
 
     if(index < self->length){
 
-        //A match was found
-        debug("Get data found at match at index: %d\n", index);
-        void *memlocation = (char*)baseaddr+(itemsize*index);
-        debug("Calculated location of item: %p\n", SHORT_ADDR(memlocation));
-
-        //Create a copy of this item
-        ret = calloc(1, itemsize);
-        if(ret == NULL){
-
-            error("%s","Copy could not be created\n");
-            return NULL;
-
-        }
-        memcpy(ret, memlocation, itemsize);
+        debug("Found match at index: %d\n", index);
+        ret = index;
 
     }else{
 
         //No match could be found
         debug("%s","No match found\n");
-        ret = NULL;
 
     }
 
@@ -250,8 +246,10 @@ void *remove_index_al(arraylist_t *self, size_t index){
 /*****************************************************/
 void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
 
-    if(free_item_func == NULL){
+    if(free_item_func != NULL){
         //The free function isn't null
+
+        debug("%s\n","Custom free function passed");
 
         void *baseaddr = self->base;
         size_t itemsize = self->item_size;
@@ -269,8 +267,15 @@ void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
 
         }
 
+    }else{
+
+        debug("%s","No custom freeing function passed...\n");
+
     }
 
+    debug("Freeing base array: %p\n", SHORT_ADDR(self->base));
+    free(self->base);
+    debug("Freeing arraylist reference: %p\n", SHORT_ADDR(self));
     free(self);
 
     return;

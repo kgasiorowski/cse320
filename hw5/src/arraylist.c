@@ -21,12 +21,12 @@ static bool resize_al(arraylist_t* self){
 
     }else
 
-    //debug("List capacity: %lu, List length: %lu\n", self->capacity, self->length);
+    debug("List capacity: %lu, List length: %lu\n", self->capacity, self->length);
 
     if(self->length == self->capacity){
 
         //Grow!
-        //debug("Attempting to grow list to size %lu\n", self->capacity*2);
+        debug("Attempting to grow list to size %lu\n", self->capacity*2);
 
         debug("Realloc size: %lu\n", (self->capacity*2)*self->item_size);
 
@@ -44,7 +44,7 @@ static bool resize_al(arraylist_t* self){
     }else if(self->length == (self->capacity/2)-1){
 
         //Shrink!
-        //debug("Attempting to shrink list to size %lu\n", self->capacity/2);
+        debug("Attempting to shrink list to size %lu\n", self->capacity/2);
 
         debug("Realloc size: %lu\n", (self->capacity*2)*self->item_size);
 
@@ -61,13 +61,16 @@ static bool resize_al(arraylist_t* self){
 
     }
 
-    //debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
+    debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
 
     return ret;
 }
 
 /*****************************************************/
 arraylist_t *new_al(size_t item_size){
+
+    debug("Entered new_al with size: %lu\n", item_size);
+    debug("Initial size: %d\n", INIT_SZ);
 
     //Base case checks
     if(item_size <= 0){
@@ -154,7 +157,8 @@ void *get_data_al(arraylist_t *self, void *data){
     int index =         -1;
 
     //Iterate over the list until a match is found or we are out of the list
-    while(memcmp((char*)baseaddr + (itemsize * ++index), data, itemsize) != 0 && index < self->length);
+    while(memcmp((char*)baseaddr + (itemsize * ++index), data, itemsize) != 0 && index < self->length)
+        debug("Checked memory address: %p\n", (char*)baseaddr + (itemsize * index));
 
     if(index < self->length){
 

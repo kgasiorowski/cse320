@@ -50,7 +50,7 @@ static bool resize_al(arraylist_t* self){
         return true;
 
 
-    }else if(self->length == (self->capacity/2)-1 && (self->capacity/2) > INIT_SZ){
+    }else if(self->length == (self->capacity/2)-1 && (self->capacity/2) >= INIT_SZ){
 
         //Shrink!
         debug("Attempting to shrink to capacity: %lu\n", self->capacity/2);
@@ -255,8 +255,6 @@ void *get_index_al(arraylist_t *self, size_t index){
 /*****************************************************/
 bool remove_data_al(arraylist_t *self, void *data){
 
-    warn("%s","This function is not yet implemented\n");
-
     size_t itemsize =       self->item_size;
     void *baseaddr =        self->base;
     int index;
@@ -266,6 +264,7 @@ bool remove_data_al(arraylist_t *self, void *data){
     for(index = 0; index < self->length; index++){
 
         current_item = (char*)baseaddr + (index * itemsize);
+        debug("Checking address: %p\n", SHORT_ADDR(current_item));
         int cmp = memcmp(current_item, data, itemsize);
 
         debug("%p : %d\n", SHORT_ADDR(current_item), cmp);
@@ -277,10 +276,27 @@ bool remove_data_al(arraylist_t *self, void *data){
 
     debug("Index of match: %d\n", index);
 
+    void *itemaddr, *nextitemaddr;
+
+    itemaddr =      (char*)baseaddr + (index * itemsize);
+    nextitemaddr =  (char*)itemaddr + itemsize;
+
+    while(index++ < self->length-1){
+
+        debug("Overwriting %p with %p\n", SHORT_ADDR(itemaddr), SHORT_ADDR(nextitemaddr));
+        memmove(itemaddr, nextitemaddr, itemsize);
+
+        itemaddr =      (char*)baseaddr + (itemsize * index);
+        nextitemaddr =  (char*)itemaddr + itemsize;
+
+    }
+
+    self->length--;
+
     if(!resize_al(self))
         return false;
 
-    return false;
+    return true;
 }
 
 /*****************************************************/

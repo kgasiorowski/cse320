@@ -242,10 +242,47 @@ Test(al_suite, 3_removal, .timeout=2, .init = setup){
     cr_assert(ret->gpa == 1, "Unexpected gpa returned: %f", ret->gpa);
     cr_assert(ret->id == 1, "Unexpected id returned: %d", ret->id);
 
+    ret = get_index_al(list, 1);
+
+    cr_assert(strcmp(ret->name, "Maya") == 0, "Unexpected name returned: %s", ret->name);
+    cr_assert(ret->gpa == 2, "Unexpected gpa returned: %f", ret->gpa);
+    cr_assert(ret->id == 2, "Unexpected id returned: %d", ret->id);
+
     cr_assert(list->length == 2, "Unexpected list size: %lu", list->length);
 
     delete_al(list, student_t_free_func);
 
+
+}
+
+Test(al_suite, 3_1_removal, .timeout=2, .init = setup){
+
+    printf("Removal test 3.1\n");
+
+    arraylist_t *list = new_al(sizeof(student_t));
+    student_t *stu, *save;
+
+    stu = gen_student("Kuba", 0, 0);
+    insert_al(list, stu);
+
+    stu = gen_student("Amanda", 1, 1);
+    save = stu;
+    insert_al(list, stu);
+
+    stu = gen_student("Maya", 2, 2);
+    insert_al(list, stu);
+
+    remove_data_al(list, save);
+
+    stu = get_index_al(list, 1);
+
+    cr_assert(strcmp(stu->name, "Maya") == 0, "Unexpected name retrieved: %s", stu->name);
+    cr_assert(stu->gpa == 2, "Unexpected gpa: %f", stu->gpa);
+    cr_assert(stu->id == 2, "Unepexted id: %d", stu->id);
+
+    cr_assert(list->length == 2, "Unexpected list length: %lu", list->length);
+
+    delete_al(list, student_t_free_func);
 
 }
 
@@ -311,7 +348,7 @@ Test(al_suite, 4_getdata_prim, .timeout=2, .init = setup){
 
 }
 
-Test(al_suite, 4_0_getdata, .timeout=2, .init = setup){
+Test(al_suite, 4_1_getdata, .timeout=2, .init = setup){
 
     printf("get_data test 4.1");
 
@@ -336,8 +373,28 @@ Test(al_suite, 4_0_getdata, .timeout=2, .init = setup){
 
 Test(al_suite, 5_shrink, .timeout=2, .init = setup){
 
-    //arraylist_t *list = new_al(sizeof(student_t));
+    printf("shrink test 5\n");
+    fflush(stdout);
 
+    arraylist_t *list = new_al(sizeof(student_t));
+    student_t *stu;
 
+    for(int i = 0; i < 6; i++){
+
+        stu = gen_student("Dummy", i/2, i);
+        insert_al(list, stu);
+
+    }
+
+    cr_assert(list->capacity == INIT_SZ*2, "Unexpected capacity, should have grown: %lu\n", list->capacity);
+
+    remove_index_al(list, 0);
+    remove_index_al(list, 0);
+    remove_index_al(list, 0);
+    remove_index_al(list, 0);
+
+    cr_assert(list->capacity == INIT_SZ, "Unexpected capacity, should have shrunk: %lu\n", list->capacity);
+
+    delete_al(list, student_t_free_func);
 
 }

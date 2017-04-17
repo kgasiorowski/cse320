@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+//static int lock;
+
 /**
  * @visibility HIDDEN FROM USER
  * @return     true on success, false on failure
@@ -179,13 +181,22 @@ size_t get_data_al(arraylist_t *self, void *data){
 
     }
 
-    size_t itemsize =   self->item_size;
-    void *baseaddr =    self->base;
-    int index =         -1;
+    size_t itemsize =       self->item_size;
+    void *baseaddr =        self->base;
+    int index;
+    void *current_item =    NULL;
 
     //Iterate over the list until a match is found or we are out of the list
-    while(memcmp((char*)baseaddr + (itemsize * ++index), data, itemsize) != 0 && index < self->length)
-        debug("Checked memory address: %p\n", (char*)baseaddr + (itemsize * index));
+    for(index = 0; index < self->length; index++){
+
+        current_item = (char*)baseaddr + (index * itemsize);
+        int cmp = memcmp(current_item, data, itemsize);
+        debug("%p : %d\n", SHORT_ADDR(current_item), cmp);
+
+        if(!cmp)
+            break;
+
+    }
 
     if(index < self->length){
 
@@ -243,19 +254,84 @@ void *get_index_al(arraylist_t *self, size_t index){
 
 /*****************************************************/
 bool remove_data_al(arraylist_t *self, void *data){
-    bool ret = false;
 
-    resize_al(self);
+    warn("%s","This function is not yet implemented\n");
 
-    return ret;
+    size_t itemsize =       self->item_size;
+    void *baseaddr =        self->base;
+    int index;
+    void *current_item =    NULL;
+
+    //Find the index
+    for(index = 0; index < self->length; index++){
+
+        current_item = (char*)baseaddr + (index * itemsize);
+        int cmp = memcmp(current_item, data, itemsize);
+
+        debug("%p : %d\n", SHORT_ADDR(current_item), cmp);
+
+        if(!cmp)
+            break;
+
+    }
+
+    debug("Index of match: %d\n", index);
+
+    if(!resize_al(self))
+        return false;
+
+    return false;
 }
 
 /*****************************************************/
 void *remove_index_al(arraylist_t *self, size_t index){
-    void *ret = 0;
 
+    debug("Entered remove with %p and index %lu\n", self, index);
 
+    if(self == NULL)
+        return NULL;
 
+    if(index >= self->length){
+
+        index = self->length-1;
+
+    }
+
+    debug("Removing index %lu\n", index);
+
+    size_t itemsize =       self->item_size;
+    void *baseaddr =        self->base;
+    void *itemaddr =        (char*)baseaddr + (itemsize * index);
+    void *nextitemaddr =    (char*)itemaddr + itemsize;
+
+    void *ret = malloc(sizeof(itemsize));
+    if(ret == NULL)
+    {
+
+        error("%s\n","Cannot copy element: out of memory!");
+        return ret;
+
+    }
+
+    if(memmove(ret, itemaddr, itemsize) == NULL)
+    {
+
+        error("%s","Memmove failed\n");
+        return NULL;
+
+    }
+
+    while(index++ < self->length-1){
+
+        debug("Overwriting %p with %p\n", SHORT_ADDR(itemaddr), SHORT_ADDR(nextitemaddr));
+        memmove(itemaddr, nextitemaddr, itemsize);
+
+        itemaddr =      (char*)baseaddr + (itemsize * index);
+        nextitemaddr =  (char*)itemaddr + itemsize;
+
+    }
+
+    self->length--;
     resize_al(self);
 
     return ret;

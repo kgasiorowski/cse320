@@ -49,11 +49,14 @@ typedef struct {
 
 #define NAME_LENGTH 100
 
-student_t *gen_student(char *name){
+student_t *gen_student(char *name, int32_t _id, double _gpa){
 
     student_t *ret = malloc(sizeof(student_t));
     ret->name = malloc(sizeof(char) * NAME_LENGTH);
     strcpy(ret->name, name);
+
+    ret->id = _id;
+    ret->gpa = _gpa;
 
     return ret;
 
@@ -64,11 +67,17 @@ void student_t_free_func(void *argptr){
     student_t *stu = (student_t*)argptr;
 
     if(stu == NULL)
-        error("%s","argptr was null!\n");
+        error("argptr (%p) was null!\n", SHORT_ADDR(argptr));
     else if(stu->name == NULL)
-        warn("%s\n","argptr's name was NULL!\n");
+        warn("argptr's (%p) name was NULL!\n", SHORT_ADDR(argptr));
     else
         free(stu->name);
+
+}
+
+void print_stu(student_t *stu){
+
+    printf("Name: %s\nID: %d\nGPA: %f\n", stu->name, stu->id, stu->gpa);
 
 }
 /**************************************/
@@ -120,13 +129,13 @@ Test(al_suite, 1_1_deletion, .timeout=2, .init = setup){
     arraylist_t *list = new_al(sizeof(student_t));
     student_t *stu;
 
-    stu = gen_student("Kuba");
+    stu = gen_student("Kuba", 0, 0);
     insert_al(list, stu);
 
-    stu = gen_student("Amanda");
+    stu = gen_student("Amanda", 0, 0);
     insert_al(list, stu);
 
-    stu = gen_student("Maya");
+    stu = gen_student("Maya", 0, 0);
     insert_al(list, stu);
 
     delete_al(list, student_t_free_func);
@@ -213,6 +222,31 @@ Test(al_suite, 3_removal, .timeout=2, .init = setup){
 
     printf("Removal test 3.0\n");
 
+    arraylist_t *list = new_al(sizeof(student_t));
+    student_t *stu;
+
+    stu = gen_student("Kuba", 0, 0);
+    insert_al(list, stu);
+
+    stu = gen_student("Amanda", 1, 1);
+    insert_al(list, stu);
+
+    stu = gen_student("Maya", 2, 2);
+    insert_al(list, stu);
+
+    student_t *ret = remove_index_al(list, 1);
+
+    cr_assert_not_null(ret, "Returned value from remove is null");
+
+    cr_assert(strcmp(ret->name, "Amanda") == 0, "Unexpected name returned: %s", ret->name);
+    cr_assert(ret->gpa == 1, "Unexpected gpa returned: %f", ret->gpa);
+    cr_assert(ret->id == 1, "Unexpected id returned: %d", ret->id);
+
+    cr_assert(list->length == 2, "Unexpected list size: %lu", list->length);
+
+    delete_al(list, student_t_free_func);
+
+
 }
 
 Test(al_suite, 4_getdata_prim, .timeout=2, .init = setup){
@@ -274,6 +308,29 @@ Test(al_suite, 4_getdata_prim, .timeout=2, .init = setup){
     free(ret);
     free(temp1);
     free(temp2);
+
+}
+
+Test(al_suite, 4_0_getdata, .timeout=2, .init = setup){
+
+    printf("get_data test 4.1");
+
+    arraylist_t *list = new_al(sizeof(student_t));
+    student_t *stu, *save;
+
+    stu = gen_student("stu1", 0, 0);
+    insert_al(list, stu);
+
+    stu = gen_student("stu2", 1, 1);
+    save = stu;
+    insert_al(list, stu);
+
+    stu = gen_student("stu3", 2, 2);
+    insert_al(list, stu);
+
+    size_t index = get_data_al(list, save);
+
+    cr_assert(index == 1, "Unexpected index returned: %lu\n", index);
 
 }
 

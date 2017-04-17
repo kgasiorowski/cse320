@@ -27,7 +27,7 @@ CFLAGS += $(STD)
 
 .PHONY: clean all
 
-all: setup $(BLDD) $(TEST_EXEC)
+all: setup $(SERVER_EXEC) $(TEST_EXEC)
 
 debug: CFLAGS += $(DFLAGS)
 debug: all

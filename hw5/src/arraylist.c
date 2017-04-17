@@ -142,9 +142,9 @@ size_t insert_al(arraylist_t *self, void* data){
     return self->length-1;
 }
 
-/*****************************************************/
-void *get_data_al(arraylist_t *self, void *data){
-    void *ret = NULL;
+
+size_t get_data_al(arraylist_t *self, void *data){
+    size_t ret = 0;
 
     //Base case checks
     if(self == NULL || data == NULL){
@@ -228,8 +228,8 @@ void *get_index_al(arraylist_t *self, size_t index){
 }
 
 /*****************************************************/
-void *remove_data_al(arraylist_t *self, void *data){
-    void *ret = 0;
+bool remove_data_al(arraylist_t *self, void *data){
+    bool ret = false;
 
     resize_al(self);
 

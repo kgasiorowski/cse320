@@ -205,7 +205,7 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
     cr_assert(list->capacity == 8, "Unexpected capacity: %lu\n", list->capacity);
     cr_assert(ret == 4, "Unexpected index returned: %d\n", ret);
 
-    //delete_al(list, NULL);
+    delete_al(list, NULL);
 
 }
 
@@ -269,10 +269,18 @@ Test(al_suite, 4_getdata_prim, .timeout=2, .init = setup){
     ret = get_index_al(list, 1000);
     cr_assert(ret == NULL && errno == EINVAL, "Unexpected return value, should return NULL");
 
-    //delete_al(list, NULL);
+    delete_al(list, NULL);
 
     free(ret);
     free(temp1);
     free(temp2);
+
+}
+
+Test(al_suite, 5_shrink, .timeout=2, .init = setup){
+
+    //arraylist_t *list = new_al(sizeof(student_t));
+
+
 
 }

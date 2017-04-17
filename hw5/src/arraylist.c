@@ -52,7 +52,25 @@ static bool resize_al(arraylist_t* self){
 
         //Shrink!
         debug("Attempting to shrink to capacity: %lu\n", self->capacity/2);
-        return false;
+        void *new_base = calloc(self->capacity/2, self->item_size);
+        void *old_base = self->base;
+
+        if(new_base == NULL){
+
+            error("List %p cannot be resized", SHORT_ADDR(self));
+            return false;
+
+        }
+
+        memmove(new_base, old_base, self->length * self->item_size);
+
+        free(old_base);
+        self->base = new_base;
+        self->capacity /= 2;
+
+        debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
+
+        return true;
 
     }
 

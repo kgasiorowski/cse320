@@ -391,7 +391,6 @@ Test(al_suite, 5_shrink, .timeout=2, .init = setup){
     remove_index_al(list, 0);
     remove_index_al(list, 0);
     remove_index_al(list, 0);
-    remove_index_al(list, 0);
 
     cr_assert(list->capacity == INIT_SZ, "Unexpected capacity, should have shrunk: %lu\n", list->capacity);
 

@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//static int lock;
-
 /**
  * @visibility HIDDEN FROM USER
  * @return     true on success, false on failure
@@ -19,12 +17,13 @@ static bool resize_al(arraylist_t* self){
         errno = EINVAL;
         return false;
 
-    }else
+    }
 
     debug("List: %p\n", SHORT_ADDR(self));
     debug("List capacity: %lu, List length: %lu\n", self->capacity, self->length);
     debug("Current total list size: %lu\n", self->capacity * self->item_size);
 
+    sem_wait(&self->lock);
     if(self->length == self->capacity){
 
         //Grow!
@@ -35,6 +34,7 @@ static bool resize_al(arraylist_t* self){
         if(new_base == NULL){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
+            sem_post(&self->lock);
             return false;
 
         }
@@ -47,6 +47,7 @@ static bool resize_al(arraylist_t* self){
 
         debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
 
+        sem_post(&self->lock);
         return true;
 
 
@@ -60,6 +61,7 @@ static bool resize_al(arraylist_t* self){
         if(new_base == NULL){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
+            sem_post(&self->lock);
             return false;
 
         }
@@ -72,10 +74,11 @@ static bool resize_al(arraylist_t* self){
 
         debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
 
+        sem_post(&self->lock);
         return true;
 
     }
-
+    sem_post(&self->lock);
     return true;
 
 }
@@ -110,6 +113,7 @@ arraylist_t *new_al(size_t item_size){
     ret->length =       0;
     ret->item_size =    item_size;
     ret->base =         calloc(INIT_SZ, item_size);
+    sem_init(&ret->lock, 0, 1);
 
     if(ret->base == NULL){
 
@@ -147,6 +151,8 @@ size_t insert_al(arraylist_t *self, void* data){
 
     debug("Base address after resize: %p\n", SHORT_ADDR(self->base));
 
+    //Lock!
+    sem_wait(&self->lock);
     size_t offset = (self->item_size)*(self->length);
     debug("Offset calculated from index %lu and size %lu: %lu\n", self->length, self->item_size, offset);
 
@@ -154,10 +160,14 @@ size_t insert_al(arraylist_t *self, void* data){
     void *new_index_location = (char*)self->base + offset;
 
     debug("Location of new item: %p\n", SHORT_ADDR(new_index_location));
+
     memcpy(new_index_location, data, self->item_size);
 
     //Increase the length of the list since we are inserting
     self->length++;
+    sem_post(&self->lock);
+    //Unlock!
+
     debug("New list length: %lu, index returned: %d\n", self->length, (int)(self->length-1));
 
     //Return the index of the thing (should be last)
@@ -187,6 +197,8 @@ size_t get_data_al(arraylist_t *self, void *data){
     void *current_item =    NULL;
 
     //Iterate over the list until a match is found or we are out of the list
+
+    sem_wait(&self->lock);
     for(index = 0; index < self->length; index++){
 
         current_item = (char*)baseaddr + (index * itemsize);
@@ -197,6 +209,7 @@ size_t get_data_al(arraylist_t *self, void *data){
             break;
 
     }
+    sem_post(&self->lock);
 
     if(index < self->length){
 
@@ -216,12 +229,15 @@ size_t get_data_al(arraylist_t *self, void *data){
 /*****************************************************/
 void *get_index_al(arraylist_t *self, size_t index){
 
+    sem_wait(&self->lock);
     if(self == NULL || index >= self->length){
         errno = EINVAL;
+        sem_post(&self->lock);
         return NULL;
     }
+    sem_post(&self->lock);
 
-    void *ret = malloc(self->item_size);
+    void *ret = calloc(1, self->item_size);
     debug("Return address: %p\n", SHORT_ADDR(ret));
     if(ret == NULL){
 
@@ -230,8 +246,6 @@ void *get_index_al(arraylist_t *self, size_t index){
 
     }
 
-    memset(ret, 0, self->item_size);
-
     //Values
     void *baseaddr = self->base;
     size_t itemsize = self->item_size;
@@ -239,11 +253,13 @@ void *get_index_al(arraylist_t *self, size_t index){
     debug("Base address: %p\n", SHORT_ADDR(baseaddr));
     debug("Item size: %lu\n", itemsize);
 
+    sem_wait(&self->lock);
     void *itemloc = (char*)baseaddr + (itemsize*index);
 
     debug("Final item location: %p\n", SHORT_ADDR(itemloc));
 
     memcpy(ret, itemloc, itemsize);
+    sem_post(&self->lock);
 
     debug("%s\n", "Completed memory copy");
     debug("Returning address: %p\n", SHORT_ADDR(ret));
@@ -261,6 +277,7 @@ bool remove_data_al(arraylist_t *self, void *data){
     void *current_item =    NULL;
 
     //Find the index
+    sem_wait(&self->lock);
     for(index = 0; index < self->length; index++){
 
         current_item = (char*)baseaddr + (index * itemsize);
@@ -292,6 +309,7 @@ bool remove_data_al(arraylist_t *self, void *data){
     }
 
     self->length--;
+    sem_post(&self->lock);
 
     if(!resize_al(self))
         return false;
@@ -307,11 +325,13 @@ void *remove_index_al(arraylist_t *self, size_t index){
     if(self == NULL)
         return NULL;
 
+    sem_wait(&self->lock);
     if(index >= self->length){
 
         index = self->length-1;
 
     }
+    sem_post(&self->lock);
 
     debug("Removing index %lu\n", index);
 
@@ -329,13 +349,16 @@ void *remove_index_al(arraylist_t *self, size_t index){
 
     }
 
+    sem_wait(&self->lock);
     if(memmove(ret, itemaddr, itemsize) == NULL)
     {
 
         error("%s","Memmove failed\n");
+        sem_post(&self->lock);
         return NULL;
 
     }
+    sem_post(&self->lock);
 
     while(index++ < self->length-1){
 

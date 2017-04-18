@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include "const.h"
+#include <semaphore.h>
 
 #define SHORT_ADDR(V) ((void*)(((unsigned long)V<<48)>>48))
 
@@ -14,6 +15,7 @@
   / _ \ | |   | | |  \| |   | |_) | |     / /    | |_) |  _|   / _ \ | | | |
  / ___ \| |   | | | |\  |   |  __/| |___ / /_    |  _ <| |___ / ___ \| |_| |
 /_/   \_\_|   |_| |_| \_|   |_|   |_____/____|   |_| \_\_____/_/   \_\____/
+
 */
 
 typedef struct{
@@ -23,6 +25,8 @@ typedef struct{
     size_t item_size;
     void* base;
     /* END: .. add locks, other fields BELOW THIS COMMENT if needed .. */
+
+    sem_t lock;
 
 }arraylist_t;
 

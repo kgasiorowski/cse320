@@ -27,6 +27,9 @@ typedef struct{
     /* END: .. add locks, other fields BELOW THIS COMMENT if needed .. */
 
     sem_t lock;
+    sem_t write_lock;
+
+    unsigned int readcnt;
 
 }arraylist_t;
 

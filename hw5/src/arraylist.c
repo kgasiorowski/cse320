@@ -23,31 +23,25 @@ static bool resize_al(arraylist_t* self){
     debug("List capacity: %lu, List length: %lu\n", self->capacity, self->length);
     debug("Current total list size: %lu\n", self->capacity * self->item_size);
 
-    sem_wait(&self->lock);
+
     if(self->length == self->capacity){
 
         //Grow!
         debug("Attempting to grow to capacity: %lu, size: %lu\n", self->capacity*2, (self->capacity)*2*(self->item_size));
-        void *new_base = calloc(self->capacity*2, self->item_size);
-        void *old_base = self->base;
+        self->base = realloc(self->base, self->capacity * self->item_size * 2);
 
-        if(new_base == NULL){
+        if(self->base == NULL){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
-            sem_post(&self->lock);
+
             return false;
 
         }
-
-        memmove(new_base, old_base, self->length * self->item_size);
-
-        free(old_base);
-        self->base = new_base;
         self->capacity *= 2;
 
         debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
 
-        sem_post(&self->lock);
+
         return true;
 
 
@@ -55,30 +49,24 @@ static bool resize_al(arraylist_t* self){
 
         //Shrink!
         debug("Attempting to shrink to capacity: %lu\n", self->capacity/2);
-        void *new_base = calloc(self->capacity/2, self->item_size);
-        void *old_base = self->base;
+        self->base = realloc(self->base, self->capacity * self->item_size / 2);
 
-        if(new_base == NULL){
+        if(self->base == NULL){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
-            sem_post(&self->lock);
+
             return false;
 
         }
-
-        memmove(new_base, old_base, self->length * self->item_size);
-
-        free(old_base);
-        self->base = new_base;
         self->capacity /= 2;
 
         debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
 
-        sem_post(&self->lock);
+
         return true;
 
     }
-    sem_post(&self->lock);
+
     return true;
 
 }
@@ -114,6 +102,8 @@ arraylist_t *new_al(size_t item_size){
     ret->item_size =    item_size;
     ret->base =         calloc(INIT_SZ, item_size);
     sem_init(&ret->lock, 0, 1);
+    sem_init(&ret->write_lock, 0, 1);
+    ret->readcnt = 0;
 
     if(ret->base == NULL){
 
@@ -130,29 +120,29 @@ arraylist_t *new_al(size_t item_size){
 }
 
 /*****************************************************/
+//WRITER
 size_t insert_al(arraylist_t *self, void* data){
-    size_t ret = UINT_MAX;
 
     debug("%s\n","Entered insert");
 
     //Base case checks
     if(self == NULL || data == NULL){
         errno = EINVAL;
-        return ret;
+        return UINT_MAX;
     }
 
     //Since the size is changing, resize the list as needed
     if(!resize_al(self)){
 
         error("%s","Resize failed\n");
-        return -1;
+        return UINT_MAX;
 
     }
 
     debug("Base address after resize: %p\n", SHORT_ADDR(self->base));
 
     //Lock!
-    sem_wait(&self->lock);
+
     size_t offset = (self->item_size)*(self->length);
     debug("Offset calculated from index %lu and size %lu: %lu\n", self->length, self->item_size, offset);
 
@@ -165,7 +155,7 @@ size_t insert_al(arraylist_t *self, void* data){
 
     //Increase the length of the list since we are inserting
     self->length++;
-    sem_post(&self->lock);
+
     //Unlock!
 
     debug("New list length: %lu, index returned: %d\n", self->length, (int)(self->length-1));
@@ -174,20 +164,19 @@ size_t insert_al(arraylist_t *self, void* data){
     return self->length-1;
 }
 
-
+//READER
 size_t get_data_al(arraylist_t *self, void *data){
-    size_t ret = UINT_MAX;
+    //size_t ret = UINT_MAX;
 
     //Base case checks
     if(self == NULL){
         errno = EINVAL;
-        return ret;
+        return UINT_MAX;
     }
 
     if(data == NULL){
 
-        ret = 0;
-        return ret;
+        return 0;
 
     }
 
@@ -198,7 +187,7 @@ size_t get_data_al(arraylist_t *self, void *data){
 
     //Iterate over the list until a match is found or we are out of the list
 
-    sem_wait(&self->lock);
+
     for(index = 0; index < self->length; index++){
 
         current_item = (char*)baseaddr + (index * itemsize);
@@ -209,33 +198,34 @@ size_t get_data_al(arraylist_t *self, void *data){
             break;
 
     }
-    sem_post(&self->lock);
+
 
     if(index < self->length){
 
         debug("Found match at index: %d\n", index);
-        ret = index;
+        return index;
 
     }else{
 
         //No match could be found
         debug("%s","No match found\n");
+        return UINT_MAX;
 
     }
 
-    return ret;
 }
 
 /*****************************************************/
+//READER
 void *get_index_al(arraylist_t *self, size_t index){
 
-    sem_wait(&self->lock);
+
     if(self == NULL || index >= self->length){
         errno = EINVAL;
-        sem_post(&self->lock);
+
         return NULL;
     }
-    sem_post(&self->lock);
+
 
     void *ret = calloc(1, self->item_size);
     debug("Return address: %p\n", SHORT_ADDR(ret));
@@ -253,13 +243,12 @@ void *get_index_al(arraylist_t *self, size_t index){
     debug("Base address: %p\n", SHORT_ADDR(baseaddr));
     debug("Item size: %lu\n", itemsize);
 
-    sem_wait(&self->lock);
     void *itemloc = (char*)baseaddr + (itemsize*index);
 
     debug("Final item location: %p\n", SHORT_ADDR(itemloc));
 
+
     memcpy(ret, itemloc, itemsize);
-    sem_post(&self->lock);
 
     debug("%s\n", "Completed memory copy");
     debug("Returning address: %p\n", SHORT_ADDR(ret));
@@ -269,6 +258,7 @@ void *get_index_al(arraylist_t *self, size_t index){
 }
 
 /*****************************************************/
+//READER, then WRITER
 bool remove_data_al(arraylist_t *self, void *data){
 
     size_t itemsize =       self->item_size;
@@ -277,7 +267,8 @@ bool remove_data_al(arraylist_t *self, void *data){
     void *current_item =    NULL;
 
     //Find the index
-    sem_wait(&self->lock);
+
+    //Lock lock
     for(index = 0; index < self->length; index++){
 
         current_item = (char*)baseaddr + (index * itemsize);
@@ -290,6 +281,7 @@ bool remove_data_al(arraylist_t *self, void *data){
             break;
 
     }
+    //Unlock lock
 
     debug("Index of match: %d\n", index);
 
@@ -298,6 +290,7 @@ bool remove_data_al(arraylist_t *self, void *data){
     itemaddr =      (char*)baseaddr + (index * itemsize);
     nextitemaddr =  (char*)itemaddr + itemsize;
 
+    sem_wait(&self->lock);
     while(index++ < self->length-1){
 
         debug("Overwriting %p with %p\n", SHORT_ADDR(itemaddr), SHORT_ADDR(nextitemaddr));
@@ -318,6 +311,7 @@ bool remove_data_al(arraylist_t *self, void *data){
 }
 
 /*****************************************************/
+//READER and then WRITER
 void *remove_index_al(arraylist_t *self, size_t index){
 
     debug("Entered remove with %p and index %lu\n", self, index);
@@ -325,13 +319,13 @@ void *remove_index_al(arraylist_t *self, size_t index){
     if(self == NULL)
         return NULL;
 
-    sem_wait(&self->lock);
+
     if(index >= self->length){
 
         index = self->length-1;
 
     }
-    sem_post(&self->lock);
+
 
     debug("Removing index %lu\n", index);
 
@@ -345,20 +339,20 @@ void *remove_index_al(arraylist_t *self, size_t index){
     {
 
         error("%s\n","Cannot copy element: out of memory!");
-        return ret;
+        return NULL;
 
     }
 
-    sem_wait(&self->lock);
+
     if(memmove(ret, itemaddr, itemsize) == NULL)
     {
 
         error("%s","Memmove failed\n");
-        sem_post(&self->lock);
         return NULL;
 
     }
-    sem_post(&self->lock);
+
+    //Lock write_lock
 
     while(index++ < self->length-1){
 
@@ -371,12 +365,16 @@ void *remove_index_al(arraylist_t *self, size_t index){
     }
 
     self->length--;
+
+    //Unlock write_lock
+
     resize_al(self);
 
     return ret;
 }
 
 /*****************************************************/
+//Not thread safe and not intended to be thread safe
 void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
 
     if(free_item_func != NULL){
@@ -405,6 +403,9 @@ void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
         debug("%s","No custom freeing function passed...\n");
 
     }
+
+    sem_destroy(&self->lock);
+    sem_destroy(&self->write_lock);
 
     debug("Freeing base array: %p\n", SHORT_ADDR(self->base));
     free(self->base);

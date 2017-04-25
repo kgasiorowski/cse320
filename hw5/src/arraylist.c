@@ -23,7 +23,8 @@ static bool resize_al(arraylist_t* self){
     debug("List capacity: %lu, List length: %lu\n", self->capacity, self->length);
     debug("Current total list size: %lu\n", self->capacity * self->item_size);
 
-
+    //WRITER SECTION
+    sem_wait(&self->write_lock);
     if(self->length == self->capacity){
 
         //Grow!
@@ -66,12 +67,15 @@ static bool resize_al(arraylist_t* self){
         return true;
 
     }
+    sem_post(&self->write_lock);
+    //WRITER SECTION ENDS
 
     return true;
 
 }
 
 /*****************************************************/
+//Multithreading not necessary
 arraylist_t *new_al(size_t item_size){
 
     debug("Entered new_al with size: %lu\n", item_size);
@@ -120,7 +124,7 @@ arraylist_t *new_al(size_t item_size){
 }
 
 /*****************************************************/
-//WRITER
+//WRITER - implemented
 size_t insert_al(arraylist_t *self, void* data){
 
     debug("%s\n","Entered insert");
@@ -142,6 +146,7 @@ size_t insert_al(arraylist_t *self, void* data){
     debug("Base address after resize: %p\n", SHORT_ADDR(self->base));
 
     //Lock!
+    sem_post(&self->write_lock);
 
     size_t offset = (self->item_size)*(self->length);
     debug("Offset calculated from index %lu and size %lu: %lu\n", self->length, self->item_size, offset);
@@ -156,6 +161,7 @@ size_t insert_al(arraylist_t *self, void* data){
     //Increase the length of the list since we are inserting
     self->length++;
 
+    sem_post(&self->write_lock);
     //Unlock!
 
     debug("New list length: %lu, index returned: %d\n", self->length, (int)(self->length-1));
@@ -164,7 +170,7 @@ size_t insert_al(arraylist_t *self, void* data){
     return self->length-1;
 }
 
-//READER
+//READER - implemented
 size_t get_data_al(arraylist_t *self, void *data){
     //size_t ret = UINT_MAX;
 
@@ -185,9 +191,15 @@ size_t get_data_al(arraylist_t *self, void *data){
     int index;
     void *current_item =    NULL;
 
+    //READER SECTION
+    sem_wait(&self->lock);
+    self->readcnt++;
+    if(self->readcnt == 1) //First in
+        sem_wait(&self->write_lock);
+
+    sem_post(&self->lock);
+
     //Iterate over the list until a match is found or we are out of the list
-
-
     for(index = 0; index < self->length; index++){
 
         current_item = (char*)baseaddr + (index * itemsize);
@@ -199,6 +211,13 @@ size_t get_data_al(arraylist_t *self, void *data){
 
     }
 
+    sem_wait(&self->lock);
+    self->readcnt--;
+    if(self->readcnt == 0)
+        sem_post(&self->write_lock);
+
+    sem_post(&self->lock);
+    //READER SECTION ENDS
 
     if(index < self->length){
 
@@ -216,7 +235,7 @@ size_t get_data_al(arraylist_t *self, void *data){
 }
 
 /*****************************************************/
-//READER
+//READER - implemented
 void *get_index_al(arraylist_t *self, size_t index){
 
 
@@ -236,6 +255,14 @@ void *get_index_al(arraylist_t *self, size_t index){
 
     }
 
+    //READING SECTION
+    sem_wait(&self->lock);
+    self->readcnt++;
+    if(self->readcnt == 1) //First in
+        sem_wait(&self->write_lock);
+
+    sem_post(&self->lock);
+
     //Values
     void *baseaddr = self->base;
     size_t itemsize = self->item_size;
@@ -247,8 +274,14 @@ void *get_index_al(arraylist_t *self, size_t index){
 
     debug("Final item location: %p\n", SHORT_ADDR(itemloc));
 
-
     memcpy(ret, itemloc, itemsize);
+    sem_wait(&self->lock);
+    self->readcnt--;
+    if(self->readcnt == 0) //Last out
+        sem_post(&self->write_lock);
+
+    sem_post(&self->lock);
+    //READING SECTION ENDS
 
     debug("%s\n", "Completed memory copy");
     debug("Returning address: %p\n", SHORT_ADDR(ret));
@@ -258,7 +291,7 @@ void *get_index_al(arraylist_t *self, size_t index){
 }
 
 /*****************************************************/
-//READER, then WRITER
+//WRITER - implemented
 bool remove_data_al(arraylist_t *self, void *data){
 
     size_t itemsize =       self->item_size;
@@ -268,7 +301,8 @@ bool remove_data_al(arraylist_t *self, void *data){
 
     //Find the index
 
-    //Lock lock
+    //WRITER SECTION
+    sem_wait(&self->write_lock);
     for(index = 0; index < self->length; index++){
 
         current_item = (char*)baseaddr + (index * itemsize);
@@ -281,7 +315,6 @@ bool remove_data_al(arraylist_t *self, void *data){
             break;
 
     }
-    //Unlock lock
 
     debug("Index of match: %d\n", index);
 
@@ -290,7 +323,6 @@ bool remove_data_al(arraylist_t *self, void *data){
     itemaddr =      (char*)baseaddr + (index * itemsize);
     nextitemaddr =  (char*)itemaddr + itemsize;
 
-    sem_wait(&self->lock);
     while(index++ < self->length-1){
 
         debug("Overwriting %p with %p\n", SHORT_ADDR(itemaddr), SHORT_ADDR(nextitemaddr));
@@ -302,7 +334,8 @@ bool remove_data_al(arraylist_t *self, void *data){
     }
 
     self->length--;
-    sem_post(&self->lock);
+    sem_post(&self->write_lock);
+    //END WRITER SECTION
 
     if(!resize_al(self))
         return false;
@@ -319,13 +352,19 @@ void *remove_index_al(arraylist_t *self, size_t index){
     if(self == NULL)
         return NULL;
 
+    //READER SECTION
+    sem_wait(&self->lock);
+    self->readcnt++;
+    if(self->readcnt == 1) //First in
+        sem_wait(&self->write_lock);
+
+    sem_post(&self->lock);
 
     if(index >= self->length){
 
         index = self->length-1;
 
     }
-
 
     debug("Removing index %lu\n", index);
 
@@ -352,8 +391,17 @@ void *remove_index_al(arraylist_t *self, size_t index){
 
     }
 
-    //Lock write_lock
+    sem_wait(&self->lock);
+    self->readcnt--;
+    if(self->readcnt == 0) //Last out
+        sem_post(&self->write_lock);
 
+    sem_post(&self->lock);
+    //READER SECTION ENDS
+
+    //WRITER SECTION BEGINS
+
+    sem_wait(&self->write_lock);
     while(index++ < self->length-1){
 
         debug("Overwriting %p with %p\n", SHORT_ADDR(itemaddr), SHORT_ADDR(nextitemaddr));
@@ -365,10 +413,12 @@ void *remove_index_al(arraylist_t *self, size_t index){
     }
 
     self->length--;
+    sem_post(&self->write_lock);
+    //WRITER SECTION ENDS
 
-    //Unlock write_lock
-
-    resize_al(self);
+    if(!resize_al(self)){
+        return NULL;
+    }
 
     return ret;
 }

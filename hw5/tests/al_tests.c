@@ -6,6 +6,7 @@
 #include "debug.h"
 #include <errno.h>
 #include "const.h"
+#include <pthread.h>
 
 // Test(al_suite, 3_removal, .timeout=2, .init=setup, .fini=teardown){
 
@@ -397,3 +398,83 @@ Test(al_suite, 5_shrink, .timeout=2, .init = setup){
     delete_al(list, student_t_free_func);
 
 }
+
+#define NUM_THREADS 100
+#define NUM_OPS 10
+
+void *threadfunc1(void *arg){
+
+    arraylist_t *list = (arraylist_t*)arg;
+
+    int *myint = get_index_al(list, 0);
+    cr_assert(myint != NULL && *myint == 10);
+
+    return NULL;
+
+}
+
+void *threadfunc2(void *arg){
+
+    arraylist_t *list = (arraylist_t*)arg;
+    (void)list;
+
+    // if(list->length == 0){
+
+    //     //Add an element
+    //     printf("No elements found, inserting one\n");
+    //     int *temp = malloc(sizeof(int));
+    //     insert_al(list, temp);
+    //     free(temp);
+
+    // }else{
+
+    //     //Remove an element
+    //     printf("An element exists, removing first one\n");
+    //     int *temp = remove_index_al(list, 0);
+    //     cr_assert(temp != NULL && *temp == 100);
+    //     free(temp);
+
+    // }
+
+    return NULL;
+
+}
+
+Test(al_suite, 6_0_threadsafe, .timeout=2, .init = setup){
+
+    printf("threadsafe test 6\n");
+
+    arraylist_t *list = new_al(sizeof(int));
+
+    int *myint = malloc(sizeof(int));
+    *myint = 10;
+
+    insert_al(list, myint);
+
+    pthread_t threads[NUM_THREADS];
+
+    int i;
+    for(i = 0; i < NUM_THREADS; i++){
+
+        if(pthread_create(&threads[i], NULL, threadfunc2, (void*)list)){
+
+            cr_assert(false, "Could not create thread %d\n", i);
+
+        }
+
+
+    }
+
+    for(i = 0; i < NUM_THREADS; i++){
+
+        if(pthread_join(threads[i], NULL)){
+
+            cr_assert(false, "Couldn't join thread %d\n", i);
+
+        }
+
+    }
+
+}
+
+

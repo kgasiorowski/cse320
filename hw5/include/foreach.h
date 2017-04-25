@@ -30,6 +30,8 @@ typedef struct{
 
 }foreach_t;
 
+extern __thread foreach_t *foreach_data;
+
 typedef foreach_t Foreach_data;
 
 #endif

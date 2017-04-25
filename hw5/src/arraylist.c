@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#undef debug
+#define debug(S, ...)
+
 /**
  * @visibility HIDDEN FROM USER
  * @return     true on success, false on failure
@@ -34,17 +37,13 @@ static bool resize_al(arraylist_t* self){
         if(self->base == NULL){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
-
+            sem_post(&self->write_lock);
             return false;
 
         }
         self->capacity *= 2;
 
         debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
-
-
-        return true;
-
 
     }else if(self->length == (self->capacity/2)-1 && (self->capacity/2) >= INIT_SZ){
 
@@ -55,16 +54,13 @@ static bool resize_al(arraylist_t* self){
         if(self->base == NULL){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
-
+            sem_post(&self->write_lock);
             return false;
 
         }
         self->capacity /= 2;
 
         debug("Final list capacity: %lu, List length: %lu\n", self->capacity, self->length);
-
-
-        return true;
 
     }
     sem_post(&self->write_lock);
@@ -107,6 +103,7 @@ arraylist_t *new_al(size_t item_size){
     ret->base =         calloc(INIT_SZ, item_size);
     sem_init(&ret->lock, 0, 1);
     sem_init(&ret->write_lock, 0, 1);
+    sem_init(&ret->foreach_lock, 0 ,1);
     ret->readcnt = 0;
 
     if(ret->base == NULL){
@@ -146,7 +143,7 @@ size_t insert_al(arraylist_t *self, void* data){
     debug("Base address after resize: %p\n", SHORT_ADDR(self->base));
 
     //Lock!
-    sem_post(&self->write_lock);
+    sem_wait(&self->write_lock);
 
     size_t offset = (self->item_size)*(self->length);
     debug("Offset calculated from index %lu and size %lu: %lu\n", self->length, self->item_size, offset);
@@ -400,7 +397,7 @@ void *remove_index_al(arraylist_t *self, size_t index){
     //READER SECTION ENDS
 
     //WRITER SECTION BEGINS
-
+    sem_wait(&self->foreach_lock);
     sem_wait(&self->write_lock);
     while(index++ < self->length-1){
 
@@ -414,6 +411,7 @@ void *remove_index_al(arraylist_t *self, size_t index){
 
     self->length--;
     sem_post(&self->write_lock);
+    sem_post(&self->foreach_lock);
     //WRITER SECTION ENDS
 
     if(!resize_al(self)){
@@ -456,11 +454,10 @@ void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
 
     sem_destroy(&self->lock);
     sem_destroy(&self->write_lock);
+    sem_destroy(&self->foreach_lock);
 
     debug("Freeing base array: %p\n", SHORT_ADDR(self->base));
     free(self->base);
-    debug("Freeing arraylist reference: %p\n", SHORT_ADDR(self));
-    free(self);
 
     return;
 }

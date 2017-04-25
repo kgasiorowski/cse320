@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static __thread foreach_t *foreach_data;
+__thread foreach_t *foreach_data;
 
 void *foreach_init(arraylist_t *self){
 
@@ -25,6 +25,7 @@ void *foreach_init(arraylist_t *self){
     foreach_data = (foreach_t*)malloc(sizeof(foreach_t));
     foreach_data->current_index = 0;
     foreach_data->list = self;
+    sem_wait(&self->foreach_lock);
 
     return get_index_al(self, 0);
 
@@ -32,23 +33,21 @@ void *foreach_init(arraylist_t *self){
 
 void *foreach_next(arraylist_t *self, void *data){
 
-    //Indicates end of iterator
-    if(data == NULL)
-        return NULL;
-
-    void *rtn;
     size_t current_index;
 
     current_index = get_data_al(self, data);
 
-    if(current_index == self->length)
-        rtn = NULL;
-    else
-        rtn = get_index_al(self, current_index+1);
+    if(current_index == self->length-1){
 
-    foreach_data->current_index++;
+        foreach_break_f();
+        return NULL;
 
-    return rtn;
+    }else{
+
+        foreach_data->current_index++;
+        return get_index_al(self, current_index+1);
+
+    }
 
 }
 
@@ -63,8 +62,8 @@ size_t foreach_index(){
 
 bool foreach_break_f(){
 
+    sem_post(&foreach_data->list->foreach_lock);
     free(foreach_data);
-
     return true;
 
 }

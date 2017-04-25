@@ -8,6 +8,8 @@
 #include "const.h"
 #include <pthread.h>
 
+
+
 // Test(al_suite, 3_removal, .timeout=2, .init=setup, .fini=teardown){
 
 
@@ -97,8 +99,6 @@ void teardown(void) {
  ******************************************/
 Test(al_suite, 0_creation, .timeout=2, .init = setup){
 
-    printf("Creation test 1.0\n");
-
     arraylist_t *locallist = new_al(sizeof(test_item_t));
 
     cr_assert_not_null(locallist, "List returned was NULL");
@@ -112,8 +112,6 @@ Test(al_suite, 0_creation, .timeout=2, .init = setup){
 
 Test(al_suite, 1_deletion, .timeout=2, .init = setup){
 
-    printf("Deletion test 1.0\n");
-
     arraylist_t *list = new_al(sizeof(int));
 
     int a = 12345;
@@ -124,8 +122,6 @@ Test(al_suite, 1_deletion, .timeout=2, .init = setup){
 }
 
 Test(al_suite, 1_1_deletion, .timeout=2, .init = setup){
-
-    printf("Deletion test 1.1\n");
 
     arraylist_t *list = new_al(sizeof(student_t));
     student_t *stu;
@@ -146,8 +142,6 @@ Test(al_suite, 1_1_deletion, .timeout=2, .init = setup){
 
 Test(al_suite, 2_insertion, .timeout=2, .init = setup){
 
-    printf("Insertion test 2.0\n");
-
     arraylist_t *list = new_al(sizeof(int));
 
     cr_assert_not_null(list, "List returned was NULL");
@@ -165,8 +159,6 @@ Test(al_suite, 2_insertion, .timeout=2, .init = setup){
 
 Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
-    printf("Insertion test 2.1\n");
-
     arraylist_t *list = new_al(sizeof(int));
     int ret;
 
@@ -177,7 +169,9 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
+    debug("%s","First insert\n");
     ret = insert_al(list, &test[0]);
+    debug("%s","First insert success\n");
 
     cr_assert(list->length == 1, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 4, "Unexpected capacity: %lu\n", list->capacity);
@@ -185,7 +179,9 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
+    debug("%s","Second insert\n");
     ret = insert_al(list, &test[1]);
+    debug("%s","Second insert success\n");
 
     cr_assert(list->length == 2, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 4, "Unexpected capacity: %lu\n", list->capacity);
@@ -193,7 +189,9 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
+    debug("%s","Third insert\n");
     ret = insert_al(list, &test[2]);
+    debug("%s","Third insert success\n");
 
     cr_assert(list->length == 3, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 4, "Unexpected capacity: %lu\n", list->capacity);
@@ -201,7 +199,9 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
+    debug("%s","Fourth insert\n");
     ret = insert_al(list, &test[3]);
+    debug("%s","Fourth insert success\n");
 
     cr_assert(list->length == 4, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 4, "Unexpected capacity: %lu\n", list->capacity);
@@ -209,7 +209,9 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
+    debug("%s","Fifth insert\n");
     ret = insert_al(list, &test[4]);
+    debug("%s","Fifth insert success\n");
 
     cr_assert(list->length == 5, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 8, "Unexpected capacity: %lu\n", list->capacity);
@@ -220,8 +222,6 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 }
 
 Test(al_suite, 3_removal, .timeout=2, .init = setup){
-
-    printf("Removal test 3.0\n");
 
     arraylist_t *list = new_al(sizeof(student_t));
     student_t *stu;
@@ -258,8 +258,6 @@ Test(al_suite, 3_removal, .timeout=2, .init = setup){
 
 Test(al_suite, 3_1_removal, .timeout=2, .init = setup){
 
-    printf("Removal test 3.1\n");
-
     arraylist_t *list = new_al(sizeof(student_t));
     student_t *stu, *save;
 
@@ -288,8 +286,6 @@ Test(al_suite, 3_1_removal, .timeout=2, .init = setup){
 }
 
 Test(al_suite, 4_getdata_prim, .timeout=2, .init = setup){
-
-    printf("Get_data test 4.0\n");
 
     arraylist_t *list = new_al(sizeof(int));
 
@@ -351,8 +347,6 @@ Test(al_suite, 4_getdata_prim, .timeout=2, .init = setup){
 
 Test(al_suite, 4_1_getdata, .timeout=2, .init = setup){
 
-    printf("get_data test 4.1");
-
     arraylist_t *list = new_al(sizeof(student_t));
     student_t *stu, *save;
 
@@ -373,9 +367,6 @@ Test(al_suite, 4_1_getdata, .timeout=2, .init = setup){
 }
 
 Test(al_suite, 5_shrink, .timeout=2, .init = setup){
-
-    printf("shrink test 5\n");
-    fflush(stdout);
 
     arraylist_t *list = new_al(sizeof(student_t));
     student_t *stu;
@@ -441,8 +432,6 @@ void *threadfunc2(void *arg){
 }
 
 Test(al_suite, 6_0_threadsafe, .timeout=2, .init = setup){
-
-    printf("threadsafe test 6\n");
 
     arraylist_t *list = new_al(sizeof(int));
 

@@ -56,6 +56,17 @@ static arraylist_t *list;
 void init_stu(){
 
 	list = new_al(sizeof(Student));
+    Student *stu = gen_student("Kuba", 1, 1);
+    insert_al(list, stu);
+    free(stu);
+
+    stu = gen_student("Amanda", 2, 2);
+    insert_al(list, stu);
+    free(stu);
+
+    stu = gen_student("Maya", 3, 3);
+    insert_al(list, stu);
+    free(stu);
 
 }
 
@@ -75,21 +86,21 @@ void exit_int(){
 void exit_stu(){
 
 	delete_al(list, student_t_free_func);
+    free(list);
 
 }
 
 Test(foreach_suite, 00_init, .timeout=2, .init = init_stu, .fini = exit_stu){
 
-	Student *rtn = foreach_init(list);
+    arraylist_t *mylist = new_al(sizeof(Student));
+
+	Student *rtn = foreach_init(mylist);
 
 	cr_assert(rtn == NULL, "Unexpected return: %p\n", (void*)rtn);
 
 }
 
 Test(foreach_suite, 01_init, .timeout=2, .init = init_stu, .fini = exit_stu){
-
-	Student *stu = gen_student("Kuba", 1, 1);
-	insert_al(list, stu);
 
 	Student *rtn = foreach_init(list);
 
@@ -104,13 +115,6 @@ Test(foreach_suite, 01_init, .timeout=2, .init = init_stu, .fini = exit_stu){
 
 Test(foreach_suite, 02_init, .timeout=2, .init = init_stu, .fini = exit_stu){
 
-    Student *stu = gen_student("Kuba", 1, 1);
-    insert_al(list, stu);
-    stu = gen_student("Amanda", 2, 2);
-    insert_al(list, stu);
-    stu = gen_student("Maya", 3, 3);
-    insert_al(list, stu);
-
     Student *rtn = foreach_init(list);
 
     int temp = memcmp(rtn, list->base, list->item_size) == 0;
@@ -119,19 +123,9 @@ Test(foreach_suite, 02_init, .timeout=2, .init = init_stu, .fini = exit_stu){
     cr_assert(rtn != list->base, "Returned a pointer from the list: %p\n", (void*)rtn);
     cr_assert(temp, "Return did not return an identical copy: %d\n", temp);
 
-
 }
 
 Test(foreach_suite, 10_foreach_index, .timeout=2, .init = init_stu, .fini = exit_stu){
-
-    Student *stu;
-
-    stu = gen_student("Kuba", 1, 1);
-    insert_al(list, stu);
-    stu = gen_student("Amanda", 2, 2);
-    insert_al(list, stu);
-    stu = gen_student("Maya", 3, 3);
-    insert_al(list, stu);
 
     size_t i = 0;
     foreach(Student, stu, list){
@@ -147,15 +141,6 @@ Test(foreach_suite, 10_foreach_index, .timeout=2, .init = init_stu, .fini = exit
 
 Test(foreach_suite, 20_foreach_value, .timeout=2, .init = init_stu, .fini = exit_stu){
 
-    Student *stu;
-
-    stu = gen_student("Kuba", 1, 1);
-    insert_al(list, stu);
-    stu = gen_student("Amanda", 2, 2);
-    insert_al(list, stu);
-    stu = gen_student("Maya", 3, 3);
-    insert_al(list, stu);
-
     foreach(Student, stu, list){
 
         char *name = stu->name;
@@ -168,5 +153,39 @@ Test(foreach_suite, 20_foreach_value, .timeout=2, .init = init_stu, .fini = exit
             cr_assert(strcmp(name, "Maya") == 0);
 
     }
+
+}
+
+Test(foreach_suite, 30_foreach_data, .timeout=2){
+
+    arraylist_t *mylist = new_al(sizeof(Student));
+    Student *stu = gen_student("Kuba", 1, 1);
+    insert_al(mylist, stu);
+    free(stu);
+
+    stu = gen_student("Amanda", 2, 2);
+    insert_al(mylist, stu);
+    free(stu);
+
+    stu = gen_student("Maya", 3, 3);
+    insert_al(mylist, stu);
+    free(stu);
+
+    int semval;
+
+    foreach_init(mylist);
+
+    sem_getvalue(&mylist->write_lock, &semval);
+
+    cr_assert(semval == 0, "Semval had unexpected value: %d\n", semval);
+    cr_assert(foreach_data->list == list, "Unexpected list address: %p, should be %p\n", (void*)(foreach_data->list), (void*)list);
+    cr_assert(foreach_data->current_index == 0, "Unexpected index: %lu\n", foreach_data->current_index);
+
+    cr_assert(foreach_break_f(), "Break did not return true\n");
+
+    sem_getvalue(&mylist->write_lock, &semval);
+
+    cr_assert(semval == 1, "Semval had unexpected value: %d\n", semval);
+
 
 }

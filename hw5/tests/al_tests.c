@@ -50,7 +50,7 @@ typedef struct {
 
 #define NAME_LENGTH 100
 
-student_t *gen_student(char *name, int32_t _id, double _gpa){
+static student_t *gen_student(char *name, int32_t _id, double _gpa){
 
     student_t *ret = malloc(sizeof(student_t));
     ret->name = malloc(sizeof(char) * NAME_LENGTH);
@@ -63,7 +63,7 @@ student_t *gen_student(char *name, int32_t _id, double _gpa){
 
 }
 
-void student_t_free_func(void *argptr){
+static void student_t_free_func(void *argptr){
 
     student_t *stu = (student_t*)argptr;
 
@@ -76,7 +76,7 @@ void student_t_free_func(void *argptr){
 
 }
 
-void print_stu(student_t *stu){
+static void print_stu(student_t *stu){
 
     printf("Name: %s\nID: %d\nGPA: %f\n", stu->name, stu->id, stu->gpa);
 
@@ -84,7 +84,7 @@ void print_stu(student_t *stu){
 /**************************************/
 
 void setup(void) {
-    printf("\n\nTest beginning: ");
+    //printf("\n\nTest beginning: ");
 }
 
 void teardown(void) {

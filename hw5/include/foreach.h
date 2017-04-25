@@ -13,14 +13,23 @@
 
 #define foreach_break if( foreach_break_f() ) break
 
-void *foreach_init(void *self);
+void *foreach_init(arraylist_t *self);
 
-void *foreach_next(void *self, void* data);
+void *foreach_next(arraylist_t *self, void* data);
 
 size_t foreach_index();
 
 bool foreach_break_f();
 
-int apply(void *self, int (*application)(void*));
+int apply(arraylist_t *self, int (*application)(void*));
+
+typedef struct{
+
+	size_t current_index;
+	arraylist_t *list;
+
+}foreach_t;
+
+typedef foreach_t Foreach_data;
 
 #endif

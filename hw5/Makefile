@@ -34,6 +34,9 @@ debug: all
 
 test: setup $(TEST_EXEC)
 
+mytests: clean all
+	./bin/tests
+
 setup:
 	mkdir -p bin build
 

@@ -9,13 +9,6 @@
 #include <pthread.h>
 
 
-
-// Test(al_suite, 3_removal, .timeout=2, .init=setup, .fini=teardown){
-
-
-
-// }
-
 /******************************************
  *                  ITEMS                 *
  ******************************************/
@@ -152,7 +145,6 @@ Test(al_suite, 2_insertion, .timeout=2, .init = setup){
 
     insert_al(list, test);
 
-    info("%s\n","Inserting completed without crashing");
     cr_assert(list->length == 1, "Insert didn't increment length");
 
 }
@@ -169,9 +161,7 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
-    debug("%s","First insert\n");
     ret = insert_al(list, &test[0]);
-    debug("%s","First insert success\n");
 
     cr_assert(list->length == 1, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 4, "Unexpected capacity: %lu\n", list->capacity);
@@ -179,9 +169,7 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
-    debug("%s","Second insert\n");
     ret = insert_al(list, &test[1]);
-    debug("%s","Second insert success\n");
 
     cr_assert(list->length == 2, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 4, "Unexpected capacity: %lu\n", list->capacity);
@@ -189,9 +177,7 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
-    debug("%s","Third insert\n");
     ret = insert_al(list, &test[2]);
-    debug("%s","Third insert success\n");
 
     cr_assert(list->length == 3, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 4, "Unexpected capacity: %lu\n", list->capacity);
@@ -199,9 +185,7 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
-    debug("%s","Fourth insert\n");
     ret = insert_al(list, &test[3]);
-    debug("%s","Fourth insert success\n");
 
     cr_assert(list->length == 4, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 4, "Unexpected capacity: %lu\n", list->capacity);
@@ -209,9 +193,7 @@ Test(al_suite, 2_1_insertion, .timeout=2, .init = setup){
 
     //
 
-    debug("%s","Fifth insert\n");
     ret = insert_al(list, &test[4]);
-    debug("%s","Fifth insert success\n");
 
     cr_assert(list->length == 5, "Unexpected length: %lu\n", list->length);
     cr_assert(list->capacity == 8, "Unexpected capacity: %lu\n", list->capacity);
@@ -443,26 +425,13 @@ Test(al_suite, 6_0_threadsafe, .timeout=2, .init = setup){
     pthread_t threads[NUM_THREADS];
 
     int i;
-    for(i = 0; i < NUM_THREADS; i++){
-
-        if(pthread_create(&threads[i], NULL, threadfunc2, (void*)list)){
-
+    for(i = 0; i < NUM_THREADS; i++)
+        if(pthread_create(&threads[i], NULL, threadfunc2, (void*)list))
             cr_assert(false, "Could not create thread %d\n", i);
 
-        }
-
-
-    }
-
-    for(i = 0; i < NUM_THREADS; i++){
-
-        if(pthread_join(threads[i], NULL)){
-
+    for(i = 0; i < NUM_THREADS; i++)
+        if(pthread_join(threads[i], NULL))
             cr_assert(false, "Couldn't join thread %d\n", i);
-
-        }
-
-    }
 
 }
 

@@ -5,6 +5,7 @@
 #include "arraylist.h"
 #include "debug.h"
 #include "foreach.h"
+#include <unistd.h>
 
 /**************************************/
 typedef struct {
@@ -65,6 +66,14 @@ void init_stu(){
     free(stu);
 
     stu = gen_student("Maya", 3, 3);
+    insert_al(list, stu);
+    free(stu);
+
+    stu = gen_student("John", 4, 4);
+    insert_al(list, stu);
+    free(stu);
+
+    stu = gen_student("Ronak", 5, 5);
     insert_al(list, stu);
     free(stu);
 
@@ -175,17 +184,72 @@ Test(foreach_suite, 30_foreach_data, .timeout=2){
 
     foreach_init(mylist);
 
-    sem_getvalue(&mylist->write_lock, &semval);
+    sem_getvalue(&mylist->foreach_lock, &semval);
 
     cr_assert(semval == 0, "Semval had unexpected value: %d\n", semval);
-    cr_assert(foreach_data->list == list, "Unexpected list address: %p, should be %p\n", (void*)(foreach_data->list), (void*)list);
+    cr_assert(foreach_data->list == mylist, "Unexpected list address: %p, should be %p\n", (void*)(foreach_data->list), (void*)list);
     cr_assert(foreach_data->current_index == 0, "Unexpected index: %lu\n", foreach_data->current_index);
 
     cr_assert(foreach_break_f(), "Break did not return true\n");
 
-    sem_getvalue(&mylist->write_lock, &semval);
+}
 
-    cr_assert(semval == 1, "Semval had unexpected value: %d\n", semval);
+static void *threadfunc1(void *arg){
 
+    arraylist_t *list = arg;
+
+    loop(5){
+
+        printf("Starting remove\n");
+        remove_index_al(list, __i__);
+        printf("Finished remove\n");
+
+    }
+
+    return NULL;
+
+}
+
+static void *threadfunc2(void *arg){
+
+    arraylist_t *list = arg;
+
+    loop(1){
+
+        printf("Starting foreach\n");
+        foreach(Student, stu, list){
+
+            printf("Student name: %s\n", stu->name);
+            sleep(10);
+
+        }
+        printf("Finished foreach\n");
+
+    }
+
+    return NULL;
+
+}
+
+#define NUMTHREADS 5
+
+Test(foreach_suite, 40_thread_safety, .timeout=2, .init = init_stu, .fini = exit_stu){
+
+    pthread_t removethread;
+    pthread_t foreach_threads[NUMTHREADS];
+
+    loop(NUMTHREADS){
+
+        pthread_create(&foreach_threads[__i__], NULL, threadfunc2, list);
+
+    }
+    pthread_create(&removethread, NULL, threadfunc1, list);
+
+    loop(NUMTHREADS){
+
+        pthread_join(foreach_threads[__i__], NULL);
+
+    }
+    pthread_join(removethread, NULL);
 
 }

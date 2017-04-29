@@ -41,4 +41,6 @@
 #define success(S, ...)
 #endif
 
+#define loop(times) for(int __i__ = 0; __i__ < times; __i__++)
+
 #endif /* DEBUG_H */

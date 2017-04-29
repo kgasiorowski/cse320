@@ -27,6 +27,7 @@ static bool resize_al(arraylist_t* self){
     debug("Current total list size: %lu\n", self->capacity * self->item_size);
 
     //WRITER SECTION
+    sem_wait(&self->foreach_lock);
     sem_wait(&self->write_lock);
     if(self->length == self->capacity){
 
@@ -38,6 +39,7 @@ static bool resize_al(arraylist_t* self){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
             sem_post(&self->write_lock);
+            sem_post(&self->foreach_lock);
             return false;
 
         }
@@ -55,6 +57,7 @@ static bool resize_al(arraylist_t* self){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
             sem_post(&self->write_lock);
+            sem_post(&self->foreach_lock);
             return false;
 
         }
@@ -64,6 +67,7 @@ static bool resize_al(arraylist_t* self){
 
     }
     sem_post(&self->write_lock);
+    sem_post(&self->foreach_lock);
     //WRITER SECTION ENDS
 
     return true;
@@ -143,6 +147,7 @@ size_t insert_al(arraylist_t *self, void* data){
     debug("Base address after resize: %p\n", SHORT_ADDR(self->base));
 
     //Lock!
+    sem_wait(&self->foreach_lock);
     sem_wait(&self->write_lock);
 
     size_t offset = (self->item_size)*(self->length);
@@ -159,6 +164,7 @@ size_t insert_al(arraylist_t *self, void* data){
     self->length++;
 
     sem_post(&self->write_lock);
+    sem_post(&self->foreach_lock);
     //Unlock!
 
     debug("New list length: %lu, index returned: %d\n", self->length, (int)(self->length-1));
@@ -299,6 +305,7 @@ bool remove_data_al(arraylist_t *self, void *data){
     //Find the index
 
     //WRITER SECTION
+    sem_wait(&self->foreach_lock);
     sem_wait(&self->write_lock);
     for(index = 0; index < self->length; index++){
 
@@ -332,6 +339,7 @@ bool remove_data_al(arraylist_t *self, void *data){
 
     self->length--;
     sem_post(&self->write_lock);
+    sem_post(&self->foreach_lock);
     //END WRITER SECTION
 
     if(!resize_al(self))
@@ -347,6 +355,9 @@ void *remove_index_al(arraylist_t *self, size_t index){
     debug("Entered remove with %p and index %lu\n", self, index);
 
     if(self == NULL)
+        return NULL;
+
+    if(self->length == 0)
         return NULL;
 
     //READER SECTION

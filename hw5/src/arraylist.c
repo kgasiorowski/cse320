@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#undef debug
-#define debug(S, ...)
 
 /**
  * @visibility HIDDEN FROM USER
@@ -27,7 +25,6 @@ static bool resize_al(arraylist_t* self){
     debug("Current total list size: %lu\n", self->capacity * self->item_size);
 
     //WRITER SECTION
-    sem_wait(&self->foreach_lock);
     sem_wait(&self->write_lock);
     if(self->length == self->capacity){
 
@@ -39,7 +36,6 @@ static bool resize_al(arraylist_t* self){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
             sem_post(&self->write_lock);
-            sem_post(&self->foreach_lock);
             return false;
 
         }
@@ -57,7 +53,6 @@ static bool resize_al(arraylist_t* self){
 
             error("List %p cannot be resized", SHORT_ADDR(self));
             sem_post(&self->write_lock);
-            sem_post(&self->foreach_lock);
             return false;
 
         }
@@ -67,7 +62,6 @@ static bool resize_al(arraylist_t* self){
 
     }
     sem_post(&self->write_lock);
-    sem_post(&self->foreach_lock);
     //WRITER SECTION ENDS
 
     return true;
@@ -107,7 +101,6 @@ arraylist_t *new_al(size_t item_size){
     ret->base =         calloc(INIT_SZ, item_size);
     sem_init(&ret->lock, 0, 1);
     sem_init(&ret->write_lock, 0, 1);
-    sem_init(&ret->foreach_lock, 0 ,1);
     ret->readcnt = 0;
 
     if(ret->base == NULL){
@@ -147,7 +140,6 @@ size_t insert_al(arraylist_t *self, void* data){
     debug("Base address after resize: %p\n", SHORT_ADDR(self->base));
 
     //Lock!
-    sem_wait(&self->foreach_lock);
     sem_wait(&self->write_lock);
 
     size_t offset = (self->item_size)*(self->length);
@@ -164,7 +156,6 @@ size_t insert_al(arraylist_t *self, void* data){
     self->length++;
 
     sem_post(&self->write_lock);
-    sem_post(&self->foreach_lock);
     //Unlock!
 
     debug("New list length: %lu, index returned: %d\n", self->length, (int)(self->length-1));
@@ -305,7 +296,6 @@ bool remove_data_al(arraylist_t *self, void *data){
     //Find the index
 
     //WRITER SECTION
-    sem_wait(&self->foreach_lock);
     sem_wait(&self->write_lock);
     for(index = 0; index < self->length; index++){
 
@@ -339,7 +329,6 @@ bool remove_data_al(arraylist_t *self, void *data){
 
     self->length--;
     sem_post(&self->write_lock);
-    sem_post(&self->foreach_lock);
     //END WRITER SECTION
 
     if(!resize_al(self))
@@ -360,13 +349,16 @@ void *remove_index_al(arraylist_t *self, size_t index){
     if(self->length == 0)
         return NULL;
 
-    //READER SECTION
-    sem_wait(&self->lock);
-    self->readcnt++;
-    if(self->readcnt == 1) //First in
-        sem_wait(&self->write_lock);
+    sem_wait(&self->write_lock);
 
-    sem_post(&self->lock);
+    // //READER SECTION
+    // sem_wait(&self->lock);
+
+    // self->readcnt++;
+    // if(self->readcnt == 1) //First in
+    //     sem_wait(&self->write_lock);
+
+    // sem_post(&self->lock);
 
     if(index >= self->length){
 
@@ -399,17 +391,17 @@ void *remove_index_al(arraylist_t *self, size_t index){
 
     }
 
-    sem_wait(&self->lock);
-    self->readcnt--;
-    if(self->readcnt == 0) //Last out
-        sem_post(&self->write_lock);
+    // sem_wait(&self->lock);
 
-    sem_post(&self->lock);
-    //READER SECTION ENDS
+    // self->readcnt--;
+    // if(self->readcnt == 0) //Last out
+    //     sem_post(&self->write_lock);
+
+    // sem_post(&self->lock);
+    // //READER SECTION ENDS
 
     //WRITER SECTION BEGINS
-    sem_wait(&self->foreach_lock);
-    sem_wait(&self->write_lock);
+
     while(index++ < self->length-1){
 
         debug("Overwriting %p with %p\n", SHORT_ADDR(itemaddr), SHORT_ADDR(nextitemaddr));
@@ -422,7 +414,6 @@ void *remove_index_al(arraylist_t *self, size_t index){
 
     self->length--;
     sem_post(&self->write_lock);
-    sem_post(&self->foreach_lock);
     //WRITER SECTION ENDS
 
     if(!resize_al(self)){
@@ -465,7 +456,6 @@ void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
 
     sem_destroy(&self->lock);
     sem_destroy(&self->write_lock);
-    sem_destroy(&self->foreach_lock);
 
     debug("Freeing base array: %p\n", SHORT_ADDR(self->base));
     free(self->base);

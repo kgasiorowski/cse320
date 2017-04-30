@@ -8,6 +8,7 @@
 #include "const.h"
 #include <pthread.h>
 
+#undef debug
 
 /******************************************
  *                  ITEMS                 *

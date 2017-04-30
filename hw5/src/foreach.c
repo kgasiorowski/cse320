@@ -25,7 +25,15 @@ void *foreach_init(arraylist_t *self){
     foreach_data = (foreach_t*)malloc(sizeof(foreach_t));
     foreach_data->current_index = 0;
     foreach_data->list = self;
-    sem_wait(&self->foreach_lock);
+
+    //Read lock here
+    sem_wait(&self->lock);
+
+    self->readcnt++;
+    if(self->readcnt == 1) //First in
+        sem_wait(&self->write_lock);
+
+    sem_post(&self->lock);
 
     return get_index_al(self, 0);
 
@@ -62,13 +70,38 @@ size_t foreach_index(){
 
 bool foreach_break_f(){
 
-    sem_post(&foreach_data->list->foreach_lock);
+    //Read unlock here
+    arraylist_t *self = foreach_data->list;
+
+    sem_wait(&self->lock);
+
+    self->readcnt--;
+    if(self->readcnt == 0) //Last out
+        sem_post(&self->write_lock);
+
+    sem_post(&self->lock);
+
     free(foreach_data);
     return true;
 
 }
 
 int32_t apply(arraylist_t *self, int32_t (*application)(void*)){
+
+    //Application refers to the function that changes each item in the list
+
+    size_t itemsize = self->item_size;
+    // size_t listlength = self->length;
+    size_t capacity = self->capacity;
+
+    //Create a copy of the arraylist as a backup
+    arraylist_t *list_copy = calloc(itemsize, capacity);
+    memcpy(self, list_copy, itemsize*capacity);
+
+
+
+    //Release our backup
+    free(list_copy);
 
     return 0;
 

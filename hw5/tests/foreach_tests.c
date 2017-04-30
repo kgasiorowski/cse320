@@ -7,6 +7,8 @@
 #include "foreach.h"
 #include <unistd.h>
 
+#undef debug
+
 /**************************************/
 typedef struct {
     char* name;
@@ -180,13 +182,7 @@ Test(foreach_suite, 30_foreach_data, .timeout=2){
     insert_al(mylist, stu);
     free(stu);
 
-    int semval;
-
     foreach_init(mylist);
-
-    sem_getvalue(&mylist->foreach_lock, &semval);
-
-    cr_assert(semval == 0, "Semval had unexpected value: %d\n", semval);
     cr_assert(foreach_data->list == mylist, "Unexpected list address: %p, should be %p\n", (void*)(foreach_data->list), (void*)list);
     cr_assert(foreach_data->current_index == 0, "Unexpected index: %lu\n", foreach_data->current_index);
 
@@ -201,7 +197,7 @@ static void *threadfunc1(void *arg){
     loop(5){
 
         printf("Starting remove\n");
-        remove_index_al(list, __i__);
+        remove_index_al(list, 0);
         printf("Finished remove\n");
 
     }

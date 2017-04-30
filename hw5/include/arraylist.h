@@ -28,7 +28,6 @@ typedef struct{
 
     sem_t lock;
     sem_t write_lock;
-    sem_t foreach_lock;
 
     unsigned int readcnt;
 

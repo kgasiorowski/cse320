@@ -90,19 +90,42 @@ int32_t apply(arraylist_t *self, int32_t (*application)(void*)){
 
     //Application refers to the function that changes each item in the list
 
-    size_t itemsize = self->item_size;
-    // size_t listlength = self->length;
-    size_t capacity = self->capacity;
+    int32_t ret = 1;
+
+    const size_t itemsize =   self->item_size;
+    const size_t listlength = self->length;
+    const size_t capacity =   self->capacity;
+    const void *base =        self->base;
 
     //Create a copy of the arraylist as a backup
-    arraylist_t *list_copy = calloc(itemsize, capacity);
-    memcpy(self, list_copy, itemsize*capacity);
+    void *base_backup = calloc(itemsize, capacity);
+    memcpy(self->base, base_backup, itemsize*capacity);
 
+    //Now iterate through the arraylist
+    int i;
+    for(i = 0; i < listlength; i++){
 
+        size_t offset = (i*itemsize);
+        void *current_item = (char*)base + offset;
+
+        int32_t rt = application(current_item);
+
+        //If the thing didn't return as zero, restore the item that was changed
+        if(rt == -1){
+
+            debug("%s\n","Application failed!");
+
+            void *backup_item = (char*)base_backup + offset;
+            memcpy(current_item, backup_item, itemsize);
+            ret = 0;
+
+        }
+
+    }
 
     //Release our backup
-    free(list_copy);
+    free(base_backup);
 
-    return 0;
+    return ret;
 
 }

@@ -7,8 +7,6 @@
 #include "foreach.h"
 #include <unistd.h>
 
-#undef debug
-
 /**************************************/
 typedef struct {
     char* name;
@@ -52,6 +50,28 @@ static void print_stu(student_t *stu){
 
 }
 /**************************************/
+/**************************************/
+
+typedef struct{
+
+    int val;
+    int error;
+
+}mystruct;
+
+static mystruct *gen_struct(int _val, int _error){
+
+    mystruct *rtn = malloc(sizeof(mystruct));
+
+    rtn->val =      _val;
+    rtn->error =    _error;
+
+    return rtn;
+
+}
+
+/**************************************/
+
 
 static arraylist_t *list;
 
@@ -247,5 +267,61 @@ Test(foreach_suite, 40_thread_safety, .timeout=2, .init = init_stu, .fini = exit
 
     }
     pthread_join(removethread, NULL);
+
+}
+
+static int32_t applyfunc(void *arg){
+
+    mystruct *item = (mystruct*)arg;
+
+    item->val++;
+
+    printf("New val value: %d\n", item->val);
+
+    if(item->error == 1){
+        debug("%s","Returning -1 from application\n");
+        return -1;
+    }else{
+        debug("%s", "Returning 0 from application\n");
+        return 0;
+    }
+
+
+}
+
+Test(foreach_suite, 50_apply, .timeout=2){
+
+    arraylist_t *mylist = new_al(sizeof(mystruct));
+
+    insert_al(mylist, gen_struct(0,0));
+    insert_al(mylist, gen_struct(0,0));
+    insert_al(mylist, gen_struct(0,1));
+    insert_al(mylist, gen_struct(0,0));
+
+    apply(mylist, applyfunc);
+
+    mystruct *item;
+
+    item = get_index_al(mylist, 0);
+
+    cr_assert(item->val == 1, "Unexpected value: %d\n", item->val);
+    cr_assert(item->error == 0);
+
+    item = get_index_al(mylist, 1);
+
+    cr_assert(item->val == 1, "Unexpected value: %d\n", item->val);
+    cr_assert(item->error == 0);
+
+    item = get_index_al(mylist, 2);
+
+    cr_assert(item->val == 0, "Unexpected value: %d\n", item->val);
+    cr_assert(item->error == 1);
+
+    item = get_index_al(mylist, 3);
+
+    cr_assert(item->val == 1, "Unexpected value: %d\n", item->val);
+    cr_assert(item->error == 0);
+
+    //delete_al(mylist, NULL);
 
 }

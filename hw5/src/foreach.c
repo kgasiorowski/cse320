@@ -5,7 +5,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-__thread foreach_t *foreach_data;
+static pthread_key_t key;
+static pthread_once_t key_once = PTHREAD_ONCE_INIT;
+
+static void make_key(){
+
+    pthread_key_create(&key, NULL);
+
+}
+
+pthread_key_t getkey(){
+
+    return key;
+
+}
 
 void *foreach_init(arraylist_t *self){
 
@@ -22,18 +35,34 @@ void *foreach_init(arraylist_t *self){
 
     }
 
+    foreach_t *foreach_data;
+    pthread_once(&key_once, make_key);
+
     foreach_data = (foreach_t*)malloc(sizeof(foreach_t));
     foreach_data->current_index = 0;
     foreach_data->list = self;
 
+    pthread_setspecific(key, foreach_data);
+
     //Read lock here
+    debug("%s","Waiting for lock\n");
     sem_wait(&self->lock);
+    debug("%s","Locked lock\n");
 
     self->readcnt++;
-    if(self->readcnt == 1) //First in
-        sem_wait(&self->write_lock);
+    debug("Reader count: %d\n", self->readcnt);
 
+    if(self->readcnt == 1){
+        //First in
+        debug("%s","Waiting for write_lock\n");
+        sem_wait(&self->write_lock);
+        debug("%s","Locked write_lock\n");
+
+    }
+
+    debug("%s","Unlocking lock\n");
     sem_post(&self->lock);
+    debug("%s","Unlocked lock\n");
 
     return get_index_al(self, 0);
 
@@ -52,6 +81,8 @@ void *foreach_next(arraylist_t *self, void *data){
 
     }else{
 
+        foreach_t *foreach_data = pthread_getspecific(key);
+
         foreach_data->current_index++;
         return get_index_al(self, current_index+1);
 
@@ -60,6 +91,8 @@ void *foreach_next(arraylist_t *self, void *data){
 }
 
 size_t foreach_index(){
+
+    foreach_t *foreach_data = pthread_getspecific(key);
 
     if(foreach_data == NULL)
         return UINT_MAX;
@@ -71,6 +104,9 @@ size_t foreach_index(){
 bool foreach_break_f(){
 
     //Read unlock here
+
+    foreach_t *foreach_data = pthread_getspecific(key);
+
     arraylist_t *self = foreach_data->list;
 
     sem_wait(&self->lock);
@@ -94,12 +130,12 @@ int32_t apply(arraylist_t *self, int32_t (*application)(void*)){
 
     const size_t itemsize =   self->item_size;
     const size_t listlength = self->length;
-    const size_t capacity =   self->capacity;
+    // const size_t capacity =   self->capacity;
     const void *base =        self->base;
 
     //Create a copy of the arraylist as a backup
-    void *base_backup = calloc(itemsize, capacity);
-    memcpy(self->base, base_backup, itemsize*capacity);
+    void *base_backup = calloc(itemsize, listlength);
+    memcpy(base_backup, (void*)base, itemsize*listlength);
 
     //Now iterate through the arraylist
     int i;

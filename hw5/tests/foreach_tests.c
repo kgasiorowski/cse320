@@ -6,6 +6,7 @@
 #include "debug.h"
 #include "foreach.h"
 #include <unistd.h>
+#include <pthread.h>
 
 /**************************************/
 typedef struct {
@@ -61,10 +62,10 @@ typedef struct{
 
 static mystruct *gen_struct(int _val, int _error){
 
-    mystruct *rtn = malloc(sizeof(mystruct));
+    mystruct *rtn = (mystruct*)malloc(sizeof(mystruct));
 
-    rtn->val =      _val;
-    rtn->error =    _error;
+    rtn->val = _val;
+    rtn->error = _error;
 
     return rtn;
 
@@ -203,6 +204,9 @@ Test(foreach_suite, 30_foreach_data, .timeout=2){
     free(stu);
 
     foreach_init(mylist);
+
+    foreach_t *foreach_data = pthread_getspecific(getkey());
+
     cr_assert(foreach_data->list == mylist, "Unexpected list address: %p, should be %p\n", (void*)(foreach_data->list), (void*)list);
     cr_assert(foreach_data->current_index == 0, "Unexpected index: %lu\n", foreach_data->current_index);
 
@@ -236,7 +240,6 @@ static void *threadfunc2(void *arg){
         foreach(Student, stu, list){
 
             printf("Student name: %s\n", stu->name);
-            sleep(10);
 
         }
         printf("Finished foreach\n");
@@ -322,6 +325,6 @@ Test(foreach_suite, 50_apply, .timeout=2){
     cr_assert(item->val == 1, "Unexpected value: %d\n", item->val);
     cr_assert(item->error == 0);
 
-    //delete_al(mylist, NULL);
+    delete_al(mylist, NULL);
 
 }

@@ -5,9 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#undef debug
-#define debug(S, ...)
-
 /**
  * @visibility HIDDEN FROM USER
  * @return     true on success, false on failure
